@@ -116,32 +116,37 @@ app.use((err, req, res, next) => {
 });
 
 // ─── START SERVER ────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n🚀 Aura Track API Server running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`\nAPI Endpoints:`);
-  console.log(`  POST   /api/auth/register`);
-  console.log(`  POST   /api/auth/login`);
-  console.log(`  GET    /api/auth/me`);
-  console.log(`  GET    /api/couriers`);
-  console.log(`  POST   /api/couriers`);
-  console.log(`  GET    /api/customers`);
-  console.log(`  POST   /api/customers`);
-  console.log(`  GET    /api/shipments`);
-  console.log(`  POST   /api/shipments`);
-  console.log(`  GET    /api/shipments/:id/track  (public)`);
-  console.log(`  GET    /api/dashboard/stats`);
-  console.log(`  GET    /api/dashboard/active-map`);
-  console.log(`  POST   /api/messages/conversations  (public)`);
-  console.log(`  POST   /api/messages/send            (public)`);
-  console.log(`  GET    /api/messages/admin/conversations`);
-  console.log(`  POST   /api/quotes                (public)`);
-  console.log(`  GET    /api/quotes/admin           (admin)`);
-  console.log(`  PATCH  /api/quotes/admin/:id/status (admin)`);
-  console.log(`  POST   /api/reviews              (public)`);
-  console.log(`  GET    /api/reviews/approved       (public)`);
-  console.log(`  GET    /api/reviews/admin           (admin)`);
-  console.log(`  PATCH  /api/reviews/admin/:id/approve (admin)`);
-  console.log(`  DELETE /api/reviews/admin/:id       (admin)`);
-  console.log(`\n`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Aura Track API Server running on http://localhost:${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`\nAPI Endpoints:`);
+    console.log(`  POST   /api/auth/register`);
+    console.log(`  POST   /api/auth/login`);
+    console.log(`  GET    /api/auth/me`);
+    console.log(`  GET    /api/couriers`);
+    console.log(`  POST   /api/couriers`);
+    console.log(`  GET    /api/customers`);
+    console.log(`  POST   /api/customers`);
+    console.log(`  GET    /api/shipments`);
+    console.log(`  POST   /api/shipments`);
+    console.log(`  GET    /api/shipments/:id/track  (public)`);
+    console.log(`  GET    /api/dashboard/stats`);
+    console.log(`  GET    /api/dashboard/active-map`);
+    console.log(`  POST   /api/messages/conversations  (public)`);
+    console.log(`  POST   /api/messages/send            (public)`);
+    console.log(`  GET    /api/messages/admin/conversations`);
+    console.log(`  POST   /api/quotes                (public)`);
+    console.log(`  GET    /api/quotes/admin           (admin)`);
+    console.log(`  PATCH  /api/quotes/admin/:id/status (admin)`);
+    console.log(`  POST   /api/reviews              (public)`);
+    console.log(`  GET    /api/reviews/approved       (public)`);
+    console.log(`  GET    /api/reviews/admin           (admin)`);
+    console.log(`  PATCH  /api/reviews/admin/:id/approve (admin)`);
+    console.log(`  DELETE /api/reviews/admin/:id       (admin)`);
+    console.log(`\n`);
+  });
+}
+
+// Export for Vercel Serverless
+module.exports = app;
