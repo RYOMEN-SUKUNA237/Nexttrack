@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const pool = require('./db');
+const { pool } = require('./db');
 
 async function seed() {
   console.log('🌱 Seeding Supabase database...\n');

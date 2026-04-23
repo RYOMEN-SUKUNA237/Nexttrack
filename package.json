@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.104.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@turf/along": "^7.3.4",
     "@turf/helpers": "^7.3.4",

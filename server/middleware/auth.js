@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { supabase } = require('../db');
 require('dotenv').config();
 
 const SECRET = process.env.JWT_SECRET;
@@ -7,7 +8,7 @@ if (!SECRET || SECRET.length < 32) {
   process.exit(1);
 }
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access denied. No token provided.' });
@@ -15,8 +16,21 @@ function authMiddleware(req, res, next) {
 
   const token = header.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, SECRET, { algorithms: ['HS256'] });
-    req.user = decoded;
+    // Verify using Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      // Fallback to local JWT (in case of legacy tokens or internal tokens)
+      const decoded = jwt.verify(token, SECRET, { algorithms: ['HS256'] });
+      req.user = decoded;
+    } else {
+      req.user = {
+        id: user.id,
+        email: user.email,
+        role: 'admin' // Supabase users are considered admins for the dashboard
+      };
+    }
+    
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token.' });

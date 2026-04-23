@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
-const { authenticateToken } = require('../middleware/auth');
+const { pool } = require('../db');
+const { authMiddleware } = require('../middleware/auth');
 
 // ─── ENSURE TABLE EXISTS ─────────────────────────────────────────────
 (async () => {
@@ -81,7 +81,7 @@ router.get('/approved', async (req, res) => {
 });
 
 // ─── ADMIN: Get all reviews (with status filter) ─────────────────────
-router.get('/admin', authenticateToken, async (req, res) => {
+router.get('/admin', authMiddleware, async (req, res) => {
   try {
     const { status, search } = req.query;
     let query = 'SELECT * FROM reviews';
@@ -127,7 +127,7 @@ router.get('/admin', authenticateToken, async (req, res) => {
 });
 
 // ─── ADMIN: Approve a review ─────────────────────────────────────────
-router.patch('/admin/:id/approve', authenticateToken, async (req, res) => {
+router.patch('/admin/:id/approve', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -143,7 +143,7 @@ router.patch('/admin/:id/approve', authenticateToken, async (req, res) => {
 });
 
 // ─── ADMIN: Reject a review ──────────────────────────────────────────
-router.patch('/admin/:id/reject', authenticateToken, async (req, res) => {
+router.patch('/admin/:id/reject', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
@@ -160,7 +160,7 @@ router.patch('/admin/:id/reject', authenticateToken, async (req, res) => {
 });
 
 // ─── ADMIN: Delete a review ──────────────────────────────────────────
-router.delete('/admin/:id', authenticateToken, async (req, res) => {
+router.delete('/admin/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM reviews WHERE id = $1 RETURNING id', [id]);

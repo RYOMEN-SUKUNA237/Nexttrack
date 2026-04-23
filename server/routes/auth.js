@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const pool = require('../db');
+const { pool, supabase } = require('../db');
 const { authMiddleware, generateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -70,13 +70,29 @@ router.post('/login', async (req, res) => {
     const password = req.body.password;
 
     if (!username || !password) {
-      return res.status(400).json({ error: 'username and password are required.' });
+      return res.status(400).json({ error: 'username/email and password are required.' });
     }
 
-    if (password.length > 128) {
-      return res.status(400).json({ error: 'Invalid credentials.' });
+    // Attempt Supabase Auth login first (treating username as email)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: username,
+      password: password,
+    });
+
+    if (data && data.user && data.session) {
+      // Supabase Auth succeeded!
+      return res.json({
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          full_name: data.user.user_metadata?.full_name || 'Supabase Admin',
+          role: 'admin'
+        },
+        token: data.session.access_token
+      });
     }
 
+    // Fallback: check custom users table if Supabase auth fails
     const { rows } = await pool.query('SELECT * FROM users WHERE username = $1 OR email = $1', [username]);
     const user = rows[0];
     if (!user) {
