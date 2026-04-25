@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   LayoutDashboard, Map as MapIcon, Package, Users, Settings as SettingsIcon, 
-  Bell, LogOut, Menu, X, Search, ChevronDown, Loader2, UserCircle, Lock, Contact, MessageCircle, FileText, Star
+  Bell, LogOut, Menu, X, Search, ChevronDown, Loader2, UserCircle, Lock, Contact, MessageCircle, FileText, Star, Mail
 } from 'lucide-react';
 import { AdminPage, Courier, Shipment } from './admin/types';
 import Overview from './admin/Overview';
@@ -15,6 +15,7 @@ import CustomersPage from './admin/Customers';
 import MessagesPage from './admin/Messages';
 import QuotesPage from './admin/Quotes';
 import AdminReviewsPage from './admin/Reviews';
+import AdminEmailsPage from './admin/Emails';
 import * as api from '../services/api';
 
 const sidebarItems: { id: AdminPage; label: string; icon: React.ReactNode }[] = [
@@ -26,6 +27,7 @@ const sidebarItems: { id: AdminPage; label: string; icon: React.ReactNode }[] = 
   { id: 'messages', label: 'Messages', icon: <MessageCircle size={20} /> },
   { id: 'quotes', label: 'Quotes', icon: <FileText size={20} /> },
   { id: 'reviews', label: 'Reviews', icon: <Star size={20} /> },
+  { id: 'emails', label: 'Emails', icon: <Mail size={20} /> },
   { id: 'settings', label: 'Settings', icon: <SettingsIcon size={20} /> },
 ];
 
@@ -155,6 +157,8 @@ const Dashboard: React.FC = () => {
         return <QuotesPage />;
       case 'reviews':
         return <AdminReviewsPage />;
+      case 'emails':
+        return <AdminEmailsPage />;
       case 'settings':
         return <SettingsPage />;
       default:
@@ -205,7 +209,7 @@ const Dashboard: React.FC = () => {
                   type="text"
                   value={loginForm.username}
                   onChange={(e) => setLoginForm(p => ({ ...p, username: e.target.value }))}
-                  placeholder="admin"
+                  placeholder="Enter your email"
                   required
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none"
                 />
@@ -234,7 +238,7 @@ const Dashboard: React.FC = () => {
               {loginLoading ? 'Signing in...' : 'Sign In'}
             </button>
             <p className="text-center text-xs text-gray-400 mt-4">
-              Default credentials: <span className="font-mono text-gray-600">admin</span> / <span className="font-mono text-gray-600">admin123</span>
+              Sign in with your authorized admin credentials.
             </p>
           </form>
         </motion.div>

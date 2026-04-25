@@ -13,6 +13,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const messageRoutes = require('./routes/messages');
 const quoteRoutes = require('./routes/quotes');
 const reviewRoutes = require('./routes/reviews');
+const emailRoutes = require('./routes/emails');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -94,10 +95,11 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/messages', publicLimiter, messageRoutes);
 app.use('/api/quotes', publicLimiter, quoteRoutes);
 app.use('/api/reviews', publicLimiter, reviewRoutes);
+app.use('/api/emails', emailRoutes);
 
 // Root route — minimal, no API map exposed
 app.get('/', (req, res) => {
-  res.json({ name: 'Aura Track API', status: 'running' });
+  res.json({ name: 'NexusRoute API', status: 'running' });
 });
 
 // Health check
@@ -122,7 +124,7 @@ app.use((err, req, res, next) => {
 // ─── START SERVER ────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`\n🚀 Aura Track API Server running on http://localhost:${PORT}`);
+    console.log(`\n🚀 NexusRoute API Server running on http://localhost:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
     console.log(`\nAPI Endpoints:`);
     console.log(`  POST   /api/auth/register`);

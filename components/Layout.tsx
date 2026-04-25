@@ -81,9 +81,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="hidden lg:block bg-[#0a192f] text-gray-300 text-xs py-2">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> +19564037614</span>
+            <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> 202-846-4800</span>
             <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> nexusroutegloballogistics@gmail.com</span>
-            <span className="flex items-center gap-1.5"><MapPin className="w-3 h-3" /> 200 Logistics Blvd, Houston TX</span>
+            <span className="flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Atlanta, GA</span>
           </div>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-white transition-colors"><Facebook className="w-3.5 h-3.5" /></a>
@@ -273,11 +273,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <ul className="space-y-4 text-sm text-gray-400">
                 <li className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-400" />
-                  <span>200 Logistics Blvd,<br />Houston, TX 77001</span>
+                  <span>Atlanta, GA</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone className="w-4 h-4 flex-shrink-0 text-blue-400" />
-                  <span>+19564037614</span>
+                  <span>202-846-4800</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="w-4 h-4 flex-shrink-0 text-blue-400" />

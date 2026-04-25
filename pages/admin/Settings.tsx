@@ -175,8 +175,8 @@ const Settings: React.FC = () => {
             <p className="text-sm text-gray-500 mb-4">Manage devices where you're currently signed in.</p>
             <div className="space-y-3">
               {[
-                { device: 'Chrome on Windows', location: 'Houston, TX', current: true },
-                { device: 'Safari on iPhone', location: 'Houston, TX', current: false },
+                { device: 'Chrome on Windows', location: 'Atlanta, GA', current: true },
+                { device: 'Safari on iPhone', location: 'Atlanta, GA', current: false },
               ].map((session, i) => (
                 <div key={i} className="flex items-center justify-between py-2 px-4 bg-gray-50 rounded-lg">
                   <div>
@@ -214,11 +214,11 @@ const Settings: React.FC = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Business Phone</label>
-                <input type="tel" defaultValue="+19564037614" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
+                <input type="tel" defaultValue="202-846-4800" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Address</label>
-                <input type="text" defaultValue="200 Logistics Blvd, Houston, TX 77001" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
+                <input type="text" defaultValue="Atlanta, GA" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Tax ID / EIN</label>

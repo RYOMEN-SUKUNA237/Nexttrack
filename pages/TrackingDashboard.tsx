@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package, MapPin, Clock, CheckCircle, Truck, Pause, RotateCcw,
   ArrowLeft, Phone, User, Star, ChevronDown, ChevronUp, Box,
-  Calendar, Weight, Shield, Navigation, Loader2, AlertCircle, Search
+  Calendar, Weight, Shield, Navigation, Loader2, AlertCircle, Search, Mail, BellRing
 } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 // mapbox-gl CSS loaded via index.html <link> to avoid PostCSS conflict
@@ -35,6 +35,10 @@ const TrackingDashboard: React.FC = () => {
   const routeCoordsRef = useRef<[number, number][] | null>(null);
   const [liveProgress, setLiveProgress] = useState<number>(0);
   const [liveEta, setLiveEta] = useState<string>('');
+  const [subEmail, setSubEmail] = useState('');
+  const [subName, setSubName] = useState('');
+  const [subLoading, setSubLoading] = useState(false);
+  const [subMessage, setSubMessage] = useState('');
 
   const fetchTracking = async (id: string) => {
     setLoading(true);
@@ -564,6 +568,77 @@ const TrackingDashboard: React.FC = () => {
                 </div>
               </div>
             )}
+            )}
+
+            {/* Email Subscription */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="px-6 sm:px-8 py-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <BellRing size={20} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#0a192f] text-sm">Get Email Updates</h3>
+                    <p className="text-xs text-gray-500">Receive notifications when this shipment's status changes</p>
+                  </div>
+                </div>
+
+                {subMessage ? (
+                  <div className={`p-4 rounded-lg text-sm font-medium ${
+                    subMessage.includes('Success') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    {subMessage}
+                  </div>
+                ) : (
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!subEmail || !subEmail.includes('@')) return;
+                    setSubLoading(true);
+                    try {
+                      const { emails } = await import('../services/api');
+                      const res = await emails.subscribe({
+                        tracking_id: shipment.tracking_id,
+                        email: subEmail,
+                        name: subName || undefined,
+                      });
+                      if (res.error) throw new Error(res.error);
+                      setSubMessage('Success! You\'ll receive email updates for this shipment.');
+                    } catch (err: any) {
+                      setSubMessage(err.message || 'Failed to subscribe.');
+                    } finally {
+                      setSubLoading(false);
+                    }
+                  }} className="space-y-3">
+                    <input
+                      type="text"
+                      value={subName}
+                      onChange={(e) => setSubName(e.target.value)}
+                      placeholder="Your name (optional)"
+                      className="w-full h-10 px-4 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        value={subEmail}
+                        onChange={(e) => setSubEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        required
+                        className="flex-1 h-10 px-4 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={subLoading || !subEmail.includes('@')}
+                        className="px-5 h-10 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {subLoading ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                        Subscribe
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-gray-400">We'll only send updates about this specific shipment.</p>
+                  </form>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
       </main>

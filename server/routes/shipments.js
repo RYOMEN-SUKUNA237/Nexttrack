@@ -2,6 +2,12 @@ const express = require('express');
 const { pool } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { generateTrackingId } = require('../utils/generators');
+let createTrackingUpdateDraft;
+try {
+  createTrackingUpdateDraft = require('./emails').createTrackingUpdateDraft;
+} catch (e) {
+  createTrackingUpdateDraft = null;
+}
 
 const router = express.Router();
 
@@ -299,6 +305,26 @@ router.patch('/:id/status', authMiddleware, async (req, res) => {
 
     const { rows: updated } = await pool.query('SELECT * FROM shipments WHERE id = $1', [shipment.id]);
     res.json({ shipment: updated[0] });
+
+    // Create email drafts for tracking subscribers (fire-and-forget)
+    if (createTrackingUpdateDraft) {
+      const statusLabels = {
+        'pending': 'Order Confirmed',
+        'picked-up': 'Picked Up',
+        'in-transit': 'In Transit',
+        'out-for-delivery': 'Out for Delivery',
+        'delivered': 'Delivered',
+        'returned': 'Returned',
+        'paused': 'On Hold',
+      };
+      createTrackingUpdateDraft({
+        trackingId: shipment.tracking_id,
+        status,
+        statusLabel: statusLabels[status] || status,
+        location: location || null,
+        notes: notes || null,
+      }).catch(err => console.error('Tracking draft error:', err.message));
+    }
   } catch (err) {
     console.error('Update shipment status error:', err);
     res.status(500).json({ error: 'Internal server error.' });
@@ -388,6 +414,19 @@ router.patch('/:id/pause', authMiddleware, async (req, res) => {
 
     const { rows: updated } = await pool.query('SELECT * FROM shipments WHERE id = $1', [shipment.id]);
     res.json({ shipment: updated[0] });
+
+    // Create email drafts for tracking subscribers on pause/resume (fire-and-forget)
+    if (createTrackingUpdateDraft) {
+      createTrackingUpdateDraft({
+        trackingId: shipment.tracking_id,
+        status: newStatus,
+        statusLabel: newPaused ? 'On Hold' : 'Resumed — In Transit',
+        location: null,
+        notes: action,
+        pauseCategory: newPaused ? (pause_category || null) : null,
+        pauseReason: newPaused ? (pause_reason || null) : null,
+      }).catch(err => console.error('Tracking draft error:', err.message));
+    }
   } catch (err) {
     console.error('Pause/Resume error:', err);
     res.status(500).json({ error: 'Internal server error.' });

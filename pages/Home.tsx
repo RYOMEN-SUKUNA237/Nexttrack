@@ -740,7 +740,7 @@ const ContactSection: React.FC = () => (
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-sm">Headquarters</h4>
-                  <p className="text-sm text-gray-400 mt-1">200 Logistics Blvd, Houston, TX 77001</p>
+                  <p className="text-sm text-gray-400 mt-1">Atlanta, GA</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -749,7 +749,7 @@ const ContactSection: React.FC = () => (
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-sm">Phone</h4>
-                  <p className="text-sm text-gray-400 mt-1">+19564037614</p>
+                  <p className="text-sm text-gray-400 mt-1">202-846-4800</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">

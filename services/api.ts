@@ -269,5 +269,51 @@ export const reviews = {
     apiFetch(`/reviews/admin/${id}`, { method: 'DELETE' }),
 };
 
+// ─── EMAILS ──────────────────────────────────────────────────────────
+export const emails = {
+  // Public: subscribe to tracking updates
+  subscribe: (data: { tracking_id: string; email: string; name?: string }) =>
+    fetch(`${API_BASE}/emails/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+
+  // Public: unsubscribe
+  unsubscribe: (data: { tracking_id: string; email: string }) =>
+    fetch(`${API_BASE}/emails/unsubscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+
+  // Admin: list email drafts
+  adminListDrafts: (params?: { status?: string; type?: string; search?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set('status', params.status);
+    if (params?.type) query.set('type', params.type);
+    if (params?.search) query.set('search', params.search);
+    return apiFetch(`/emails/admin/drafts?${query.toString()}`);
+  },
+
+  // Admin: get single draft
+  adminGetDraft: (id: number) => apiFetch(`/emails/admin/drafts/${id}`),
+
+  // Admin: update draft
+  adminUpdateDraft: (id: number, data: { subject?: string; html_body?: string; text_body?: string }) =>
+    apiFetch(`/emails/admin/drafts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Admin: send draft
+  adminSendDraft: (id: number) =>
+    apiFetch(`/emails/admin/drafts/${id}/send`, { method: 'POST' }),
+
+  // Admin: cancel draft
+  adminCancelDraft: (id: number) =>
+    apiFetch(`/emails/admin/drafts/${id}/cancel`, { method: 'PATCH' }),
+
+  // Admin: delete draft
+  adminDeleteDraft: (id: number) =>
+    apiFetch(`/emails/admin/drafts/${id}`, { method: 'DELETE' }),
+
+  // Admin: list subscribers
+  adminListSubscribers: (trackingId?: string) => {
+    const query = new URLSearchParams();
+    if (trackingId) query.set('tracking_id', trackingId);
+    return apiFetch(`/emails/admin/subscribers?${query.toString()}`);
+  },
+};
+
 // ─── HEALTH ───────────────────────────────────────────────────────────
 export const health = () => fetch(`${API_BASE}/health`).then(r => r.json());
