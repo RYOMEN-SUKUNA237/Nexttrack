@@ -1,319 +1,167 @@
-const API_BASE = '/api';
+const BASE = '/api';
 
-// ─── TOKEN MANAGEMENT ────────────────────────────────────────────────
-export function getToken(): string | null {
-  return localStorage.getItem('aura_token');
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem('aura_token', token);
-}
-
-export function removeToken(): void {
-  localStorage.removeItem('aura_token');
-}
-
-export function isAuthenticated(): boolean {
-  return !!getToken();
-}
-
-// ─── BASE FETCH ──────────────────────────────────────────────────────
-async function apiFetch(endpoint: string, options: RequestInit = {}): Promise<any> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  const data = await res.json();
-
+async function req<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = localStorage.getItem('pt_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${BASE}${path}`, { ...options, headers: { ...headers, ...(options.headers as Record<string, string> || {}) } });
   if (!res.ok) {
-    // If unauthorized, clear token
-    if (res.status === 401) {
-      removeToken();
-    }
-    throw new Error(data.error || `API Error ${res.status}`);
+    const err = await res.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
   }
-
-  return data;
+  return res.json();
 }
 
-// ─── AUTH ─────────────────────────────────────────────────────────────
+// ─── Auth ──────────────────────────────────────────────────────────────────
+export const login = (username: string, password: string) =>
+  req<{ token: string; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+export const getMe = () => req<{ user: any }>('/auth/me');
+
+// Namespaced auth (legacy compat)
 export const auth = {
-  login: (username: string, password: string) =>
-    apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
-
-  register: (data: { username: string; email: string; password: string; full_name: string; phone?: string }) =>
-    apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-
-  me: () => apiFetch('/auth/me'),
-
-  updateProfile: (data: { full_name?: string; email?: string; phone?: string }) =>
-    apiFetch('/auth/me', { method: 'PUT', body: JSON.stringify(data) }),
-
-  changePassword: (current_password: string, new_password: string) =>
-    apiFetch('/auth/password', { method: 'PUT', body: JSON.stringify({ current_password, new_password }) }),
+  login: (username: string, password: string) => login(username, password),
+  me: () => getMe(),
 };
 
-// ─── COURIERS ─────────────────────────────────────────────────────────
-export const couriers = {
-  list: (params?: { status?: string; search?: string; page?: number; limit?: number }) => {
-    const query = new URLSearchParams();
-    if (params?.status) query.set('status', params.status);
-    if (params?.search) query.set('search', params.search);
-    if (params?.page) query.set('page', params.page.toString());
-    if (params?.limit) query.set('limit', params.limit.toString());
-    return apiFetch(`/couriers?${query.toString()}`);
-  },
+export const getToken = () => localStorage.getItem('pt_token');
+export const setToken = (t: string) => localStorage.setItem('pt_token', t);
+export const removeToken = () => localStorage.removeItem('pt_token');
 
-  get: (id: string) => apiFetch(`/couriers/${id}`),
-
-  create: (data: {
-    name: string; email: string; phone: string;
-    vehicle_type?: string; license_plate?: string; zone?: string;
-    emergency_contact?: string; date_of_birth?: string; national_id?: string; notes?: string;
-  }) => apiFetch('/couriers', { method: 'POST', body: JSON.stringify(data) }),
-
-  update: (id: string, data: Record<string, any>) =>
-    apiFetch(`/couriers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-
-  delete: (id: string) => apiFetch(`/couriers/${id}`, { method: 'DELETE' }),
-
-  updateStatus: (id: string, status: string) =>
-    apiFetch(`/couriers/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+// ─── Pets ──────────────────────────────────────────────────────────────────
+export const listPets = (params?: Record<string, string>) => {
+  const q = params ? '?' + new URLSearchParams(params).toString() : '';
+  return req<{ pets: any[]; pagination: any }>(`/pets${q}`);
 };
+export const getPet = (id: string) => req<{ pet: any; transports: any[] }>(`/pets/${id}`);
+export const createPet = (data: any) => req<{ pet: any }>('/pets', { method: 'POST', body: JSON.stringify(data) });
+export const updatePet = (id: string, data: any) => req<{ pet: any }>(`/pets/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deletePet = (id: string) => req<{ message: string }>(`/pets/${id}`, { method: 'DELETE' });
 
-// ─── CUSTOMERS ────────────────────────────────────────────────────────
-export const customers = {
-  list: (params?: { status?: string; search?: string; type?: string; page?: number; limit?: number }) => {
-    const query = new URLSearchParams();
-    if (params?.status) query.set('status', params.status);
-    if (params?.search) query.set('search', params.search);
-    if (params?.type) query.set('type', params.type);
-    if (params?.page) query.set('page', params.page.toString());
-    if (params?.limit) query.set('limit', params.limit.toString());
-    return apiFetch(`/customers?${query.toString()}`);
-  },
-
-  get: (id: string) => apiFetch(`/customers/${id}`),
-
-  create: (data: {
-    contact_name: string; email: string; phone: string;
-    company_name?: string; address?: string; city?: string; state?: string;
-    country?: string; postal_code?: string; type?: string; notes?: string;
-  }) => apiFetch('/customers', { method: 'POST', body: JSON.stringify(data) }),
-
-  update: (id: string, data: Record<string, any>) =>
-    apiFetch(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-
-  delete: (id: string) => apiFetch(`/customers/${id}`, { method: 'DELETE' }),
+// ─── Transports (Shipments) ────────────────────────────────────────────────
+export const listTransports = (params?: Record<string, string>) => {
+  const q = params ? '?' + new URLSearchParams(params).toString() : '';
+  return req<{ shipments: any[]; pagination: any }>(`/shipments${q}`);
 };
+export const getTransport = (id: string) => req<{ shipment: any; history: any[]; courier: any }>(`/shipments/${id}`);
+export const createTransport = (data: any) => req<{ shipment: any }>('/shipments', { method: 'POST', body: JSON.stringify(data) });
+export const updateTransportStatus = (id: string, data: any) => req<{ shipment: any }>(`/shipments/${id}/status`, { method: 'PATCH', body: JSON.stringify(data) });
+export const pauseTransport = (id: string, data?: any) => req<{ shipment: any }>(`/shipments/${id}/pause`, { method: 'PATCH', body: JSON.stringify(data || {}) });
+export const assignHandler = (id: string, courier_id: string) => req<{ shipment: any }>(`/shipments/${id}/assign`, { method: 'PATCH', body: JSON.stringify({ courier_id }) });
+export const updateTransport = (id: string, data: any) => req<{ shipment: any }>(`/shipments/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteTransport = (id: string) => req<{ message: string }>(`/shipments/${id}`, { method: 'DELETE' });
 
-// ─── SHIPMENTS ────────────────────────────────────────────────────────
+// Namespaced shipments (TrackMap compat)
 export const shipments = {
-  list: (params?: { status?: string; courier_id?: string; customer_id?: string; search?: string; page?: number; limit?: number }) => {
-    const query = new URLSearchParams();
-    if (params?.status) query.set('status', params.status);
-    if (params?.courier_id) query.set('courier_id', params.courier_id);
-    if (params?.customer_id) query.set('customer_id', params.customer_id);
-    if (params?.search) query.set('search', params.search);
-    if (params?.page) query.set('page', params.page.toString());
-    if (params?.limit) query.set('limit', params.limit.toString());
-    return apiFetch(`/shipments?${query.toString()}`);
-  },
-
-  get: (id: string) => apiFetch(`/shipments/${id}`),
-
-  create: (data: {
-    sender_name: string; receiver_name: string; origin: string; destination: string;
-    sender_email?: string; sender_phone?: string;
-    receiver_email?: string; receiver_phone?: string;
-    courier_id?: string; customer_id?: string;
-    weight?: string; dimensions?: string; cargo_type?: string;
-    description?: string; declared_value?: number; insurance?: boolean;
-    estimated_delivery?: string; special_instructions?: string;
-    origin_lat?: number; origin_lng?: number; dest_lat?: number; dest_lng?: number;
-    route_data?: any; transport_modes?: string[]; route_distance?: number; route_duration?: number; route_summary?: string;
-  }) => apiFetch('/shipments', { method: 'POST', body: JSON.stringify(data) }),
-
-  update: (id: string, data: Record<string, any>) =>
-    apiFetch(`/shipments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-
-  delete: (id: string) => apiFetch(`/shipments/${id}`, { method: 'DELETE' }),
-
-  updateStatus: (id: string, data: { status: string; location?: string; lat?: number; lng?: number; notes?: string }) =>
-    apiFetch(`/shipments/${id}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
-
-  assignCourier: (id: string, courier_id: string) =>
-    apiFetch(`/shipments/${id}/assign`, { method: 'PATCH', body: JSON.stringify({ courier_id }) }),
-
-  togglePause: (id: string, data?: { pause_category?: string; pause_reason?: string }) =>
-    apiFetch(`/shipments/${id}/pause`, { method: 'PATCH', body: JSON.stringify(data || {}) }),
-
-  // Public endpoint - no auth required
-  track: (trackingId: string) =>
-    fetch(`${API_BASE}/shipments/${trackingId}/track`).then(r => r.json()),
+  list: (params?: Record<string, string>) => listTransports(params),
+  get: (id: string) => getTransport(id),
+  togglePause: (trackingIdOrId: string, data?: any) =>
+    req<any>(`/shipments/${trackingIdOrId}/pause`, { method: 'PATCH', body: JSON.stringify(data || {}) }),
 };
 
-// ─── DASHBOARD ────────────────────────────────────────────────────────
-export const dashboard = {
-  stats: () => apiFetch('/dashboard/stats'),
-  recentActivity: (limit = 20) => apiFetch(`/dashboard/recent-activity?limit=${limit}`),
-  topCouriers: () => apiFetch('/dashboard/top-couriers'),
-  notifications: (limit = 20) => apiFetch(`/dashboard/notifications?limit=${limit}`),
-  markNotificationRead: (id: number) => apiFetch(`/dashboard/notifications/${id}/read`, { method: 'PATCH' }),
-  markAllNotificationsRead: () => apiFetch('/dashboard/notifications/read-all', { method: 'PATCH' }),
-  activeMap: () => apiFetch('/dashboard/active-map'),
+// Namespaced couriers (legacy compat)
+export const couriers = {
+  list: (params?: Record<string, string>) => listHandlers(params),
 };
 
-// ─── MESSAGES ────────────────────────────────────────────────────────
+// ─── Public Tracking ──────────────────────────────────────────────────────
+export const trackPet = (trackingId: string) =>
+  req<{ shipment: any; history: any[]; courier: any }>(`/shipments/${trackingId}/track`);
+
+// ─── Handlers (Couriers) ──────────────────────────────────────────────────
+export const listHandlers = (params?: Record<string, string>) => {
+  const q = params ? '?' + new URLSearchParams(params).toString() : '';
+  return req<{ couriers: any[]; pagination: any }>(`/couriers${q}`);
+};
+export const createHandler = (data: any) => req<{ courier: any }>('/couriers', { method: 'POST', body: JSON.stringify(data) });
+export const updateHandler = (id: string, data: any) => req<{ courier: any }>(`/couriers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteHandler = (id: string) => req<{ message: string }>(`/couriers/${id}`, { method: 'DELETE' });
+
+// ─── Customers / Owners ───────────────────────────────────────────────────
+export const listOwners = (params?: Record<string, string>) => {
+  const q = params ? '?' + new URLSearchParams(params).toString() : '';
+  return req<{ customers: any[]; pagination: any }>(`/customers${q}`);
+};
+export const createOwner = (data: any) => req<{ customer: any }>('/customers', { method: 'POST', body: JSON.stringify(data) });
+export const deleteOwner = (id: string) => req<{ message: string }>(`/customers/${id}`, { method: 'DELETE' });
+
+// ─── Dashboard ────────────────────────────────────────────────────────────
+export const getDashboardStats = () => req<any>('/dashboard/stats');
+export const getActiveMap = () => req<{ transports: any[] }>('/dashboard/active-map');
+export const markNotificationRead = (id: string) => req<any>(`/dashboard/notifications/${id}/read`, { method: 'PATCH' });
+
+// ─── Messages ────────────────────────────────────────────────────────────
+export const startConversation = (data: any) => req<any>('/messages/conversations', { method: 'POST', body: JSON.stringify(data) });
+export const sendMessage = (conversationId: number, body: string) => req<any>('/messages/send', { method: 'POST', body: JSON.stringify({ conversationId, body }) });
+export const getAdminConversations = () => req<any>('/messages/admin/conversations');
+export const getConversationMessages = (id: number) => req<any>(`/messages/admin/conversations/${id}`);
+export const replyToConversation = (id: number, body: string) => req<any>(`/messages/admin/conversations/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) });
+
+// ─── Quotes ───────────────────────────────────────────────────────────────
+export const submitQuote = (data: any) => req<any>('/quotes', { method: 'POST', body: JSON.stringify(data) });
+export const getAdminQuotes = () => req<any>('/quotes/admin');
+export const updateQuoteStatus = (id: string, status: string, notes?: string) => req<any>(`/quotes/admin/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, admin_notes: notes }) });
+
+// ─── Reviews ─────────────────────────────────────────────────────────────
+export const submitReview = (data: any) => req<any>('/reviews', { method: 'POST', body: JSON.stringify(data) });
+export const getApprovedReviews = () => req<any>('/reviews/approved');
+export const getAdminReviews = () => req<any>('/reviews/admin');
+export const approveReview = (id: string) => req<any>(`/reviews/admin/${id}/approve`, { method: 'PATCH' });
+export const deleteReview = (id: string) => req<any>(`/reviews/admin/${id}`, { method: 'DELETE' });
+
+// ─── Emails ───────────────────────────────────────────────────────────────
+export const getEmailDrafts = () => req<any>('/emails/drafts');
+export const sendEmailDraft = (id: string) => req<any>(`/emails/drafts/${id}/send`, { method: 'POST' });
+export const deleteEmailDraft = (id: string) => req<any>(`/emails/drafts/${id}`, { method: 'DELETE' });
+export const subscribeToTracking = (trackingId: string, email: string, name?: string) =>
+  req<any>('/emails/subscribe', { method: 'POST', body: JSON.stringify({ trackingId, email, name }) });
+
+// ─── Legacy Namespaces for Admin Pages ─────────────────────────────────────
+export const customers = {
+  list: listOwners,
+  create: createOwner,
+  delete: deleteOwner,
+};
+
 export const messages = {
-  // Public endpoints (visitor)
-  startConversation: (data: { visitor_id: string; visitor_name?: string; visitor_email?: string; subject?: string }) =>
-    fetch(`${API_BASE}/messages/conversations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-
-  send: (data: { conversation_id: number; content: string; sender_name?: string; sender_type?: string }) =>
-    fetch(`${API_BASE}/messages/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-
-  getMessages: (conversationId: number) =>
-    fetch(`${API_BASE}/messages/conversations/${conversationId}/messages`).then(r => r.json()),
-
-  // Admin endpoints (auth required)
-  adminListConversations: (params?: { status?: string; search?: string }) => {
-    const query = new URLSearchParams();
-    if (params?.status) query.set('status', params.status);
-    if (params?.search) query.set('search', params.search);
-    return apiFetch(`/messages/admin/conversations?${query.toString()}`);
+  adminListConversations: (params?: any) => {
+    const q = params ? '?' + new URLSearchParams(params).toString() : '';
+    return req<any>(`/messages/admin/conversations${q}`);
   },
-
-  adminGetConversation: (id: number) => apiFetch(`/messages/admin/conversations/${id}`),
-
-  adminReply: (data: { conversation_id: number; content: string }) =>
-    apiFetch('/messages/admin/reply', { method: 'POST', body: JSON.stringify(data) }),
-
-  adminCloseConversation: (id: number) =>
-    apiFetch(`/messages/admin/conversations/${id}/close`, { method: 'PATCH' }),
-
-  adminReopenConversation: (id: number) =>
-    apiFetch(`/messages/admin/conversations/${id}/reopen`, { method: 'PATCH' }),
+  adminGetConversation: (id: number | string) => req<any>(`/messages/admin/conversations/${id}`),
+  adminReply: (data: { conversation_id: number | string; content: string }) => req<any>(`/messages/admin/conversations/${data.conversation_id}/reply`, { method: 'POST', body: JSON.stringify({ body: data.content }) }),
+  adminCloseConversation: (id: number | string) => req<any>(`/messages/admin/conversations/${id}/close`, { method: 'PATCH' }),
+  adminReopenConversation: (id: number | string) => req<any>(`/messages/admin/conversations/${id}/reopen`, { method: 'PATCH' }),
 };
 
-// ─── QUOTES ─────────────────────────────────────────────────────────
 export const quotes = {
-  // Public endpoint (no auth)
-  submit: (data: { full_name: string; company?: string; email: string; phone?: string; service_type: string; details?: string }) =>
-    fetch(`${API_BASE}/quotes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-
-  // Admin endpoints (auth required)
-  adminList: (params?: { status?: string; service_type?: string; search?: string; page?: number; limit?: number }) => {
-    const query = new URLSearchParams();
-    if (params?.status) query.set('status', params.status);
-    if (params?.service_type) query.set('service_type', params.service_type);
-    if (params?.search) query.set('search', params.search);
-    if (params?.page) query.set('page', params.page.toString());
-    if (params?.limit) query.set('limit', params.limit.toString());
-    return apiFetch(`/quotes/admin?${query.toString()}`);
+  adminList: (params?: any) => {
+    const q = params ? '?' + new URLSearchParams(params).toString() : '';
+    return req<any>(`/quotes/admin${q}`);
   },
-
-  adminGet: (id: number) => apiFetch(`/quotes/admin/${id}`),
-
-  adminUpdateStatus: (id: number, data: { status: string; admin_notes?: string }) =>
-    apiFetch(`/quotes/admin/${id}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
-
-  adminUpdateNotes: (id: number, admin_notes: string) =>
-    apiFetch(`/quotes/admin/${id}/notes`, { method: 'PATCH', body: JSON.stringify({ admin_notes }) }),
-
-  adminDelete: (id: number) =>
-    apiFetch(`/quotes/admin/${id}`, { method: 'DELETE' }),
-
-  adminStats: () => apiFetch('/quotes/admin-stats'),
+  adminStats: () => req<any>('/quotes/admin/stats'),
+  adminGet: (id: string) => req<any>(`/quotes/admin/${id}`),
+  adminUpdateStatus: (id: string, data: { status: string }) => req<any>(`/quotes/admin/${id}/status`, { method: 'PATCH', body: JSON.stringify(data) }),
+  adminUpdateNotes: (id: string, notes: string) => req<any>(`/quotes/admin/${id}/notes`, { method: 'PATCH', body: JSON.stringify({ admin_notes: notes }) }),
+  adminDelete: (id: string) => req<any>(`/quotes/admin/${id}`, { method: 'DELETE' }),
 };
 
-// ─── REVIEWS ─────────────────────────────────────────────────────────
 export const reviews = {
-  // Public: submit a review (goes to pending)
-  submit: (data: { name: string; email: string; role?: string; text: string; rating: number }) =>
-    fetch(`${API_BASE}/reviews`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-
-  // Public: get approved reviews only
-  approved: () =>
-    fetch(`${API_BASE}/reviews/approved`).then(r => r.json()),
-
-  // Admin: list all reviews with optional filters
-  adminList: (params?: { status?: string; search?: string }) => {
-    const query = new URLSearchParams();
-    if (params?.status) query.set('status', params.status);
-    if (params?.search) query.set('search', params.search);
-    return apiFetch(`/reviews/admin?${query.toString()}`);
+  adminList: (params?: any) => {
+    const q = params ? '?' + new URLSearchParams(params).toString() : '';
+    return req<any>(`/reviews/admin${q}`);
   },
-
-  // Admin: approve a review
-  adminApprove: (id: number) =>
-    apiFetch(`/reviews/admin/${id}/approve`, { method: 'PATCH' }),
-
-  // Admin: reject a review
-  adminReject: (id: number, admin_notes?: string) =>
-    apiFetch(`/reviews/admin/${id}/reject`, { method: 'PATCH', body: JSON.stringify({ admin_notes }) }),
-
-  // Admin: delete a review
-  adminDelete: (id: number) =>
-    apiFetch(`/reviews/admin/${id}`, { method: 'DELETE' }),
+  adminApprove: (id: string) => req<any>(`/reviews/admin/${id}/approve`, { method: 'PATCH' }),
+  adminReject: (id: string) => req<any>(`/reviews/admin/${id}/reject`, { method: 'PATCH' }),
+  adminDelete: (id: string) => req<any>(`/reviews/admin/${id}`, { method: 'DELETE' }),
 };
 
-// ─── EMAILS ──────────────────────────────────────────────────────────
 export const emails = {
-  // Public: subscribe to tracking updates
-  subscribe: (data: { tracking_id: string; email: string; name?: string }) =>
-    fetch(`${API_BASE}/emails/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-
-  // Public: unsubscribe
-  unsubscribe: (data: { tracking_id: string; email: string }) =>
-    fetch(`${API_BASE}/emails/unsubscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
-
-  // Admin: list email drafts
-  adminListDrafts: (params?: { status?: string; type?: string; search?: string }) => {
-    const query = new URLSearchParams();
-    if (params?.status) query.set('status', params.status);
-    if (params?.type) query.set('type', params.type);
-    if (params?.search) query.set('search', params.search);
-    return apiFetch(`/emails/admin/drafts?${query.toString()}`);
+  adminListDrafts: (params?: any) => {
+    const q = params ? '?' + new URLSearchParams(params).toString() : '';
+    return req<any>(`/emails/drafts${q}`);
   },
-
-  // Admin: get single draft
-  adminGetDraft: (id: number) => apiFetch(`/emails/admin/drafts/${id}`),
-
-  // Admin: update draft
-  adminUpdateDraft: (id: number, data: { subject?: string; html_body?: string; text_body?: string }) =>
-    apiFetch(`/emails/admin/drafts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-
-  // Admin: send draft
-  adminSendDraft: (id: number) =>
-    apiFetch(`/emails/admin/drafts/${id}/send`, { method: 'POST' }),
-
-  // Admin: cancel draft
-  adminCancelDraft: (id: number) =>
-    apiFetch(`/emails/admin/drafts/${id}/cancel`, { method: 'PATCH' }),
-
-  // Admin: delete draft
-  adminDeleteDraft: (id: number) =>
-    apiFetch(`/emails/admin/drafts/${id}`, { method: 'DELETE' }),
-
-  // Admin: list subscribers
-  adminListSubscribers: (trackingId?: string) => {
-    const query = new URLSearchParams();
-    if (trackingId) query.set('tracking_id', trackingId);
-    return apiFetch(`/emails/admin/subscribers?${query.toString()}`);
-  },
+  adminSendDraft: (id: string) => req<any>(`/emails/drafts/${id}/send`, { method: 'POST' }),
+  adminCancelDraft: (id: string) => req<any>(`/emails/drafts/${id}/cancel`, { method: 'PATCH' }),
+  adminDeleteDraft: (id: string) => req<any>(`/emails/drafts/${id}`, { method: 'DELETE' }),
+  adminUpdateDraft: (id: string, data: any) => req<any>(`/emails/drafts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 };
-
-// ─── HEALTH ───────────────────────────────────────────────────────────
-export const health = () => fetch(`${API_BASE}/health`).then(r => r.json());

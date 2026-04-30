@@ -1,67 +1,14 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const { pool, supabase } = require('../db');
-const { authMiddleware, generateToken } = require('../middleware/auth');
+const { supabase } = require('../db');
+const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Password strength validator
-function validatePassword(pw) {
-  if (!pw || pw.length < 8) return 'Password must be at least 8 characters.';
-  if (pw.length > 128) return 'Password must be under 128 characters.';
-  if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
-  if (!/[a-z]/.test(pw)) return 'Password must contain at least one lowercase letter.';
-  if (!/[0-9]/.test(pw)) return 'Password must contain at least one number.';
-  return null;
-}
-
-// Input sanitizer — trim + limit length
+// Input sanitizer
 function sanitize(str, maxLen = 255) {
   if (typeof str !== 'string') return str;
   return str.trim().slice(0, maxLen);
 }
-
-// POST /api/auth/register — admin-only (must be logged in as admin to create new users)
-router.post('/register', authMiddleware, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Only admins can register new users.' });
-    }
-
-    const username = sanitize(req.body.username, 50);
-    const email = sanitize(req.body.email, 100);
-    const password = req.body.password;
-    const full_name = sanitize(req.body.full_name, 100);
-    const phone = sanitize(req.body.phone, 30);
-
-    if (!username || !email || !password || !full_name) {
-      return res.status(400).json({ error: 'username, email, password, and full_name are required.' });
-    }
-
-    const pwError = validatePassword(password);
-    if (pwError) return res.status(400).json({ error: pwError });
-
-    const { rows: existing } = await pool.query('SELECT id FROM users WHERE username = $1 OR email = $2', [username, email]);
-    if (existing.length > 0) {
-      return res.status(409).json({ error: 'Username or email already exists.' });
-    }
-
-    const hash = await bcrypt.hash(password, 12);
-
-    const { rows: inserted } = await pool.query(
-      'INSERT INTO users (username, email, password, full_name, phone) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, full_name, role, created_at',
-      [username, email, hash, full_name, phone || null]
-    );
-
-    const user = inserted[0];
-    const token = generateToken(user);
-
-    res.status(201).json({ user, token });
-  } catch (err) {
-    console.error('Register error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
@@ -88,7 +35,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: data.user.id,
         email: data.user.email,
-        full_name: data.user.user_metadata?.full_name || 'Admin',
+        full_name: (data.user.user_metadata?.full_name || 'Admin User').replace(/nexus global track/i, 'Next Trace Admin'),
         role: 'admin'
       },
       token: data.session.access_token
@@ -102,69 +49,10 @@ router.post('/login', async (req, res) => {
 // GET /api/auth/me
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    // If it's a Supabase user, req.user won't have a username, just email and role
-    if (!req.user.username && req.user.email) {
-      return res.json({
-        user: {
-          id: req.user.id,
-          email: req.user.email,
-          full_name: 'Admin User',
-          role: 'admin',
-          created_at: new Date().toISOString()
-        }
-      });
-    }
-
-    const { rows } = await pool.query('SELECT id, username, email, full_name, role, phone, avatar, created_at FROM users WHERE id = $1', [req.user.id]);
-    if (!rows[0]) return res.status(404).json({ error: 'User not found.' });
-    res.json({ user: rows[0] });
+    // Return user object populated by authMiddleware directly
+    res.json({ user: req.user });
   } catch (err) {
     console.error('Get profile error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-// PUT /api/auth/me
-router.put('/me', authMiddleware, async (req, res) => {
-  try {
-    const { full_name, email, phone, avatar } = req.body;
-    await pool.query(
-      'UPDATE users SET full_name = COALESCE($1, full_name), email = COALESCE($2, email), phone = COALESCE($3, phone), avatar = COALESCE($4, avatar) WHERE id = $5',
-      [full_name || null, email || null, phone || null, avatar || null, req.user.id]
-    );
-
-    const { rows } = await pool.query('SELECT id, username, email, full_name, role, phone, avatar, created_at FROM users WHERE id = $1', [req.user.id]);
-    res.json({ user: rows[0] });
-  } catch (err) {
-    console.error('Update profile error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-// PUT /api/auth/password
-router.put('/password', authMiddleware, async (req, res) => {
-  try {
-    const { current_password, new_password } = req.body;
-    if (!current_password || !new_password) {
-      return res.status(400).json({ error: 'current_password and new_password are required.' });
-    }
-
-    const pwError = validatePassword(new_password);
-    if (pwError) return res.status(400).json({ error: pwError });
-
-    const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
-    const user = rows[0];
-    const valid = await bcrypt.compare(current_password, user.password);
-    if (!valid) {
-      return res.status(401).json({ error: 'Current password is incorrect.' });
-    }
-
-    const hash = await bcrypt.hash(new_password, 12);
-    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hash, req.user.id]);
-
-    res.json({ message: 'Password updated successfully.' });
-  } catch (err) {
-    console.error('Password change error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });

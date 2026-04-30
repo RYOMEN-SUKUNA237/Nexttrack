@@ -1,377 +1,268 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  LayoutDashboard, Map as MapIcon, Package, Users, Settings as SettingsIcon, 
-  Bell, LogOut, Menu, X, Search, ChevronDown, Loader2, UserCircle, Lock, Contact, MessageCircle, FileText, Star, Mail
+import {
+  LayoutDashboard, Truck, PawPrint, Users, Settings as SettingsIcon,
+  Bell, LogOut, Menu, X, Search, Loader2, UserCircle, Lock,
+  MessageCircle, FileText, Star, Mail, Map as MapIcon, Heart
 } from 'lucide-react';
-import { AdminPage, Courier, Shipment } from './admin/types';
+import { AdminPage } from './admin/types';
 import Overview from './admin/Overview';
-import Couriers from './admin/Couriers';
-import ShipmentsPage from './admin/Shipments';
+import Pets from './admin/Pets';
+import Handlers from './admin/Handlers';
+import Transports from './admin/Transports';
 import TrackMap from './admin/TrackMap';
-import SettingsPage from './admin/Settings';
-import CustomersPage from './admin/Customers';
 import MessagesPage from './admin/Messages';
 import QuotesPage from './admin/Quotes';
 import AdminReviewsPage from './admin/Reviews';
 import AdminEmailsPage from './admin/Emails';
+import SettingsPage from './admin/Settings';
 import * as api from '../services/api';
 
-const sidebarItems: { id: AdminPage; label: string; icon: React.ReactNode }[] = [
-  { id: 'overview', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-  { id: 'couriers', label: 'Couriers', icon: <Users size={20} /> },
-  { id: 'customers', label: 'Customers', icon: <Contact size={20} /> },
-  { id: 'shipments', label: 'Shipments', icon: <Package size={20} /> },
-  { id: 'track-map', label: 'Live Map', icon: <MapIcon size={20} /> },
-  { id: 'messages', label: 'Messages', icon: <MessageCircle size={20} /> },
-  { id: 'quotes', label: 'Quotes', icon: <FileText size={20} /> },
-  { id: 'reviews', label: 'Reviews', icon: <Star size={20} /> },
-  { id: 'emails', label: 'Emails', icon: <Mail size={20} /> },
-  { id: 'settings', label: 'Settings', icon: <SettingsIcon size={20} /> },
+const NAV: { id: AdminPage; label: string; icon: React.ReactNode; badge?: string }[] = [
+  { id: 'overview',   label: 'Dashboard',   icon: <LayoutDashboard size={18} /> },
+  { id: 'pets',       label: 'Pets',         icon: <PawPrint size={18} />,  badge: 'Core' },
+  { id: 'handlers',   label: 'Handlers',     icon: <Users size={18} /> },
+  { id: 'transports', label: 'Transports',   icon: <Truck size={18} /> },
+  { id: 'track-map',  label: 'Live Map',     icon: <MapIcon size={18} /> },
+  { id: 'messages',   label: 'Messages',     icon: <MessageCircle size={18} /> },
+  { id: 'quotes',     label: 'Quotes',       icon: <FileText size={18} /> },
+  { id: 'reviews',    label: 'Reviews',      icon: <Star size={18} /> },
+  { id: 'emails',     label: 'Emails',       icon: <Mail size={18} /> },
+  { id: 'settings',   label: 'Settings',     icon: <SettingsIcon size={18} /> },
 ];
 
 const Dashboard: React.FC = () => {
   const [activePage, setActivePage] = useState<AdminPage>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [couriers, setCouriers] = useState<Courier[]>([]);
-  const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [adminUser, setAdminUser] = useState<any>(null);
 
-  // Check existing auth on mount
   useEffect(() => {
-    const token = api.getToken();
+    const token = localStorage.getItem('pt_token');
     if (token) {
-      api.auth.me()
-        .then(data => { setAdminUser(data.user); setIsLoggedIn(true); })
-        .catch(() => { api.removeToken(); })
+      api.getMe()
+        .then((d: any) => { setAdminUser(d.user); setIsLoggedIn(true); })
+        .catch(() => localStorage.removeItem('pt_token'))
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
   }, []);
 
-  // Fetch data when logged in
-  const fetchData = useCallback(async () => {
-    if (!isLoggedIn) return;
-    try {
-      const [courierRes, shipmentRes] = await Promise.all([
-        api.couriers.list({ limit: 200 }),
-        api.shipments.list({ limit: 200 }),
-      ]);
-      // Map backend fields to frontend Courier/Shipment types
-      setCouriers(courierRes.couriers.map((c: any) => ({
-        id: c.id.toString(),
-        courierId: c.courier_id,
-        name: c.name,
-        email: c.email,
-        phone: c.phone,
-        vehicleType: c.vehicle_type,
-        licensePlate: c.license_plate || '',
-        zone: c.zone || '',
-        status: c.status,
-        registeredAt: c.created_at?.split('T')[0] || c.created_at,
-        totalDeliveries: c.total_deliveries,
-        rating: c.rating,
-        avatar: c.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=0a192f&color=fff&size=100`,
-      })));
-      setShipments(shipmentRes.shipments.map((s: any) => ({
-        id: s.id.toString(),
-        trackingId: s.tracking_id,
-        sender: s.sender_name,
-        receiver: s.receiver_name,
-        origin: s.origin,
-        destination: s.destination,
-        status: s.status,
-        courierId: s.courier_id,
-        courierName: s.courier_id ? (courierRes.couriers.find((c: any) => c.courier_id === s.courier_id)?.name || 'Unknown') : 'Unassigned',
-        weight: s.weight || 'N/A',
-        type: s.cargo_type || 'General',
-        createdAt: s.created_at?.split('T')[0] || s.created_at,
-        estimatedDelivery: s.estimated_delivery || '',
-        progress: s.computed_progress ?? s.progress,
-        isPaused: !!s.is_paused,
-        pauseCategory: s.pause_category || undefined,
-        pauseReason: s.pause_reason || undefined,
-        lat: s.current_lat || s.dest_lat,
-        lng: s.current_lng || s.dest_lng,
-      })));
-    } catch (err) {
-      console.error('Failed to fetch data:', err);
-    }
-  }, [isLoggedIn]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError('');
-    setLoginLoading(true);
+    setLoginError(''); setLoginLoading(true);
     try {
-      const data = await api.auth.login(loginForm.username, loginForm.password);
-      api.setToken(data.token);
-      setAdminUser(data.user);
-      setIsLoggedIn(true);
-    } catch (err: any) {
-      setLoginError(err.message || 'Login failed.');
-    } finally {
-      setLoginLoading(false);
-    }
+      const d: any = await api.login(loginForm.username, loginForm.password);
+      localStorage.setItem('pt_token', d.token);
+      setAdminUser(d.user); setIsLoggedIn(true);
+    } catch (err: any) { setLoginError(err.message || 'Login failed.'); }
+    finally { setLoginLoading(false); }
   };
 
   const handleLogout = () => {
-    api.removeToken();
-    setIsLoggedIn(false);
-    setAdminUser(null);
-    setCouriers([]);
-    setShipments([]);
+    localStorage.removeItem('pt_token');
+    setIsLoggedIn(false); setAdminUser(null);
   };
 
-  const navigate = (page: string) => {
-    setActivePage(page as AdminPage);
-    setSidebarOpen(false);
-  };
+  const navigate = (page: string) => { setActivePage(page as AdminPage); setSidebarOpen(false); };
 
   const renderPage = () => {
     switch (activePage) {
-      case 'overview':
-        return <Overview couriers={couriers} shipments={shipments} onNavigate={navigate} />;
-      case 'couriers':
-        return <Couriers couriers={couriers} setCouriers={setCouriers} onRefresh={fetchData} />;
-      case 'customers':
-        return <CustomersPage onRefresh={fetchData} />;
-      case 'shipments':
-        return <ShipmentsPage shipments={shipments} setShipments={setShipments} couriers={couriers} onNavigate={navigate} onRefresh={fetchData} />;
-      case 'track-map':
-        return <TrackMap shipments={shipments} setShipments={setShipments} onRefresh={fetchData} />;
-      case 'messages':
-        return <MessagesPage />;
-      case 'quotes':
-        return <QuotesPage />;
-      case 'reviews':
-        return <AdminReviewsPage />;
-      case 'emails':
-        return <AdminEmailsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return <Overview couriers={couriers} shipments={shipments} onNavigate={navigate} />;
+      case 'overview':   return <Overview />;
+      case 'pets':       return <Pets />;
+      case 'handlers':   return <Handlers />;
+      case 'transports': return <Transports />;
+      case 'track-map':  return <TrackMap shipments={[]} setShipments={() => {}} onRefresh={() => {}} />;
+      case 'messages':   return <MessagesPage />;
+      case 'quotes':     return <QuotesPage />;
+      case 'reviews':    return <AdminReviewsPage />;
+      case 'emails':     return <AdminEmailsPage />;
+      case 'settings':   return <SettingsPage />;
+      default:           return <Overview />;
     }
   };
 
-  const currentLabel = sidebarItems.find(i => i.id === activePage)?.label || 'Dashboard';
-  const initials = adminUser?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'AD';
+  const initials = adminUser?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'PW';
+  const currentLabel = NAV.find(n => n.id === activePage)?.label || 'Dashboard';
 
-  // Loading spinner
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 size={36} className="animate-spin text-[#0a192f]" />
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFF8F0' }}>
+      <div className="text-center">
+        <PawPrint className="w-10 h-10 mx-auto animate-bounce mb-3" style={{ color: '#F59E0B' }} />
+        <p className="text-sm text-gray-400">Loading Next Trace...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Login screen
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-[#0a192f] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden"
-        >
-          <div className="bg-[#0a192f] px-8 py-10 text-center">
-            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-[#0a192f] text-2xl font-bold">NR</span>
-            </div>
-            <h1 className="text-2xl font-bold text-white">NexusRoute Global Logistics</h1>
-            <p className="text-gray-400 text-sm mt-1">Admin Portal</p>
+  // ── Login Screen ──────────────────────────────────────────────────────────
+  if (!isLoggedIn) return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg,#0D4B4D 0%,#0a3335 60%,#1a1a2e 100%)' }}>
+      {/* Paw prints decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none opacity-10">
+        {['10%,15%','80%,10%','20%,70%','75%,80%','50%,40%'].map((pos, i) => (
+          <span key={i} className="absolute text-6xl" style={{ left: pos.split(',')[0], top: pos.split(',')[1] }}>🐾</span>
+        ))}
+      </div>
+
+      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative z-10">
+        {/* Header */}
+        <div className="px-8 py-10 text-center" style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <PawPrint className="w-8 h-8" style={{ color: '#F59E0B' }} />
           </div>
-          <form onSubmit={handleLogin} className="p-8 space-y-5">
-            {loginError && (
-              <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200">
-                {loginError}
-              </div>
-            )}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Username or Email</label>
-              <div className="relative">
-                <UserCircle size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={loginForm.username}
-                  onChange={(e) => setLoginForm(p => ({ ...p, username: e.target.value }))}
-                  placeholder="Enter your email"
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Password</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="password"
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm(p => ({ ...p, password: e.target.value }))}
-                  placeholder="••••••••"
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={loginLoading}
-              className="w-full py-3 bg-[#0a192f] text-white font-medium rounded-lg hover:bg-[#112d57] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {loginLoading ? <Loader2 size={18} className="animate-spin" /> : null}
-              {loginLoading ? 'Signing in...' : 'Sign In'}
-            </button>
-            <p className="text-center text-xs text-gray-400 mt-4">
-              Sign in with your authorized admin credentials.
-            </p>
-          </form>
-        </motion.div>
-      </div>
-    );
-  }
+          <h1 className="text-2xl font-bold text-white">Next Trace Admin</h1>
+          <p className="text-amber-100 text-sm mt-1">Pet Transport Management Portal</p>
+        </div>
 
+        <form onSubmit={handleLogin} className="p-8 space-y-5">
+          {loginError && (
+            <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-xl border border-red-200">{loginError}</div>
+          )}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email / Username</label>
+            <div className="relative">
+              <UserCircle size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" value={loginForm.username} required
+                onChange={e => setLoginForm(p => ({ ...p, username: e.target.value }))}
+                placeholder="admin@nexttrace.com"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+            <div className="relative">
+              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="password" value={loginForm.password} required
+                onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
+                placeholder="••••••••"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none" />
+            </div>
+          </div>
+          <button type="submit" disabled={loginLoading}
+            className="w-full py-3 text-white font-semibold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-md"
+            style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
+            {loginLoading ? <Loader2 size={18} className="animate-spin" /> : <PawPrint size={18} />}
+            {loginLoading ? 'Signing in...' : 'Sign In to Next Trace'}
+          </button>
+          <p className="text-center text-xs text-gray-400">Authorized personnel only.</p>
+        </form>
+      </motion.div>
+    </div>
+  );
+
+  // ── Admin Shell ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Mobile Overlay */}
+    <div className="min-h-screen flex" style={{ background: '#FFF8F0' }}>
+      {/* Mobile overlay */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
         )}
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-[#0a192f] text-gray-300 flex flex-col z-40 transform transition-transform duration-300 lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
-      >
+      <aside className={`fixed inset-y-0 left-0 w-64 flex flex-col z-40 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        style={{ background: 'linear-gradient(180deg,#0D4B4D 0%,#0a3335 100%)' }}>
         {/* Logo */}
-        <div className="h-16 lg:h-20 flex items-center justify-between px-5 border-b border-gray-800 flex-shrink-0">
-          <Link to="/" className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-            <div className="w-7 h-7 bg-white rounded-sm flex items-center justify-center">
-              <span className="text-[#0a192f] text-xs font-bold">AT</span>
+        <div className="h-18 flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
+              <PawPrint className="w-5 h-5 text-white" />
             </div>
-            ADMIN
+            <div>
+              <span className="text-white font-bold text-base tracking-tight">Next Trace</span>
+              <p className="text-teal-400 text-xs leading-tight">Admin Portal</p>
+            </div>
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-gray-400 hover:text-white">
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Nav Items */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigate(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all ${
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
+          {NAV.map(item => (
+            <button key={item.id} onClick={() => navigate(item.id)}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-xl transition-all ${
                 activePage === item.id
-                  ? 'bg-white/10 text-white'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  ? 'text-white shadow-md'
+                  : 'text-teal-200 hover:bg-white/10 hover:text-white'
               }`}
-            >
+              style={activePage === item.id ? { background: 'linear-gradient(135deg,#F59E0B,#D97706)' } : {}}>
               {item.icon}
               <span>{item.label}</span>
-              {activePage === item.id && (
-                <div className="ml-auto w-1.5 h-1.5 bg-blue-400 rounded-full" />
+              {item.badge && activePage !== item.id && (
+                <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-400 font-semibold">{item.badge}</span>
               )}
+              {activePage === item.id && <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />}
             </button>
           ))}
         </nav>
 
-        {/* Sidebar Footer */}
-        <div className="p-3 border-t border-gray-800 flex-shrink-0">
-          <div className="flex items-center gap-3 px-4 py-3 mb-1">
-            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{initials}</div>
+        {/* Sidebar footer */}
+        <div className="p-3 border-t border-white/10 flex-shrink-0">
+          <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>{initials}</div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">{adminUser?.full_name || 'Admin'}</p>
-              <p className="text-xs text-gray-500 truncate">{adminUser?.email || ''}</p>
+              <p className="text-sm font-semibold text-white truncate">{adminUser?.full_name || 'Admin'}</p>
+              <p className="text-xs text-teal-400 truncate">{adminUser?.email || ''}</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-            <LogOut size={16} />
-            <span>Sign Out</span>
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-teal-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+            <LogOut size={15} /><span>Sign Out</span>
           </button>
-          <Link to="/" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors mt-1">
-            <span className="w-4 h-4 flex items-center justify-center text-xs">←</span>
-            <span>Back to Site</span>
+          <Link to="/" className="flex items-center gap-3 px-3 py-2 text-sm text-teal-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors mt-0.5">
+            <span className="text-sm">←</span><span>Back to Site</span>
           </Link>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-        {/* Top Header */}
-        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 sm:px-6 lg:px-8">
+        {/* Top bar */}
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-amber-100 px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
+              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-amber-50 rounded-xl transition-colors">
                 <Menu size={20} />
               </button>
               <div>
-                <h1 className="text-lg font-bold text-[#0a192f]">{currentLabel}</h1>
-                <p className="text-xs text-gray-400 hidden sm:block">NexusRoute Global Logistics Admin Portal</p>
+                <h1 className="text-lg font-bold" style={{ color: '#0D4B4D' }}>{currentLabel}</h1>
+                <p className="text-xs text-gray-400 hidden sm:block">Next Trace Pet Transport Admin</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Search */}
+            <div className="flex items-center gap-2">
               <div className="hidden md:flex items-center relative">
                 <Search size={14} className="absolute left-3 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-9 pr-4 py-2 w-48 lg:w-64 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none"
-                />
+                <input type="text" placeholder="Search..."
+                  className="pl-9 pr-4 py-2 w-48 lg:w-56 bg-amber-50 border border-amber-200 rounded-xl text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-200 outline-none" />
               </div>
-              {/* Notifications */}
-              <button className="relative p-2 bg-gray-50 rounded-lg text-gray-500 hover:text-[#0a192f] hover:bg-gray-100 transition-colors">
+              <button className="relative p-2 bg-amber-50 rounded-xl text-gray-500 hover:bg-amber-100 transition-colors">
                 <Bell size={18} />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
               </button>
-              {/* Avatar */}
-              <div className="w-9 h-9 rounded-full bg-[#0a192f] flex items-center justify-center text-white text-xs font-bold">
-                {initials}
-              </div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm"
+                style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>{initials}</div>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activePage}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
+            <motion.div key={activePage}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18 }}>
               {renderPage()}
             </motion.div>
           </AnimatePresence>

@@ -177,6 +177,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const {
+      pet_id, transport_type,
       sender_name, sender_email, sender_phone,
       receiver_name, receiver_email, receiver_phone,
       origin, destination, origin_lat, origin_lng, dest_lat, dest_lng,
@@ -211,27 +212,29 @@ router.post('/', authMiddleware, async (req, res) => {
 
     const { rows: inserted } = await pool.query(`
       INSERT INTO shipments (
-        tracking_id, sender_name, sender_email, sender_phone,
+        tracking_id, pet_id, transport_type,
+        sender_name, sender_email, sender_phone,
         receiver_name, receiver_email, receiver_phone,
         origin, destination, origin_lat, origin_lng, dest_lat, dest_lng,
         status, courier_id, customer_id, weight, dimensions, cargo_type,
-        description, declared_value, insurance, estimated_delivery, special_instructions,
+        description, estimated_delivery, special_instructions,
         route_data, transport_modes, route_distance, route_duration, route_summary,
         departed_at
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30) RETURNING *
     `, [
-      trackingId,
+      trackingId, pet_id || null, transport_type || 'road',
       sender_name, sender_email || null, sender_phone || null,
       receiver_name, receiver_email || null, receiver_phone || null,
       origin, destination,
       origin_lat || null, origin_lng || null, dest_lat || null, dest_lng || null,
       initialStatus, courier_id || null, customer_id || null,
       weight || null, dimensions || null, cargo_type || 'General',
-      description || null, declared_value || null, insurance ? true : false,
-      estDelivery, special_instructions || null,
+      description || null, estDelivery, special_instructions || null,
       route_data ? JSON.stringify(route_data) : null,
       transport_modes ? JSON.stringify(transport_modes) : null,
-      route_distance || null, route_duration || null, route_summary || null,
+      route_distance != null ? String(route_distance) : null, 
+      route_duration != null ? String(route_duration) : null, 
+      route_summary || null,
       departedAt
     ]);
 
@@ -240,7 +243,7 @@ router.post('/', authMiddleware, async (req, res) => {
     // Add tracking history entry
     await pool.query(
       'INSERT INTO tracking_history (shipment_id, tracking_id, status, location, notes, updated_by) VALUES ($1, $2, $3, $4, $5, $6)',
-      [shipment.id, trackingId, initialStatus, origin, 'Shipment created.', req.user.username]
+      [shipment.id, trackingId, initialStatus, origin, 'Shipment created.', req.user.full_name || 'Admin']
     );
 
     // Notification
@@ -269,8 +272,9 @@ router.post('/', authMiddleware, async (req, res) => {
       }
     });
   } catch (err) {
+    require('fs').writeFileSync('CRASH_LOG.txt', err.stack || err.toString());
     console.error('Create shipment error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: err.message || 'Internal server error.' });
   }
 });
 
@@ -312,7 +316,7 @@ router.patch('/:id/status', authMiddleware, async (req, res) => {
     // Add tracking history
     await pool.query(
       'INSERT INTO tracking_history (shipment_id, tracking_id, status, location, lat, lng, notes, updated_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [shipment.id, shipment.tracking_id, status, location || null, lat || null, lng || null, notes || null, req.user.username]
+      [shipment.id, shipment.tracking_id, status, location || null, lat || null, lng || null, notes || null, req.user.full_name || 'Admin']
     );
 
     // Update courier delivery count if delivered
@@ -371,7 +375,7 @@ router.patch('/:id/assign', authMiddleware, async (req, res) => {
 
     await pool.query(
       'INSERT INTO tracking_history (shipment_id, tracking_id, status, notes, updated_by) VALUES ($1, $2, $3, $4, $5)',
-      [shipment.id, shipment.tracking_id, 'picked-up', `Assigned to courier ${courier.name} (${courier_id}).`, req.user.username]
+      [shipment.id, shipment.tracking_id, 'picked-up', `Assigned to courier ${courier.name} (${courier_id}).`, req.user.full_name || 'Admin']
     );
 
     const { rows: updated } = await pool.query('SELECT * FROM shipments WHERE id = $1', [shipment.id]);
@@ -420,7 +424,7 @@ router.patch('/:id/pause', authMiddleware, async (req, res) => {
 
     await pool.query(
       'INSERT INTO tracking_history (shipment_id, tracking_id, status, notes, updated_by) VALUES ($1, $2, $3, $4, $5)',
-      [shipment.id, shipment.tracking_id, newStatus, action, req.user.username]
+      [shipment.id, shipment.tracking_id, newStatus, action, req.user.full_name || 'Admin']
     );
 
     await pool.query('INSERT INTO notifications (title, message, type) VALUES ($1, $2, $3)', [
@@ -496,17 +500,14 @@ router.put('/:id', authMiddleware, async (req, res) => {
         dimensions = COALESCE($10, dimensions),
         cargo_type = COALESCE($11, cargo_type),
         description = COALESCE($12, description),
-        declared_value = COALESCE($13, declared_value),
-        insurance = COALESCE($14, insurance),
-        estimated_delivery = COALESCE($15, estimated_delivery),
-        special_instructions = COALESCE($16, special_instructions)
-      WHERE id = $17
+        estimated_delivery = COALESCE($13, estimated_delivery),
+        special_instructions = COALESCE($14, special_instructions)
+      WHERE id = $15
     `, [
       sender_name || null, sender_email || null, sender_phone || null,
       receiver_name || null, receiver_email || null, receiver_phone || null,
       origin || null, destination || null, weight || null, dimensions || null,
-      cargo_type || null, description || null, declared_value || null,
-      insurance != null ? (insurance ? true : false) : null,
+      cargo_type || null, description || null, 
       estimated_delivery || null, special_instructions || null,
       shipment.id
     ]);

@@ -180,20 +180,20 @@ const ChatWidget: React.FC = () => {
             className="absolute bottom-16 right-0 w-[360px] h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-[#0a192f] px-5 py-4 flex items-center justify-between flex-shrink-0">
+            <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ background: 'linear-gradient(135deg,#0D4B4D,#0a3335)' }}>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
                   <Headphones size={18} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-semibold text-sm">NexusRoute Global Logistics Support</p>
+                  <p className="text-white font-semibold text-sm">Next Trace Pet Support</p>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-gray-400 text-[11px]">We typically reply in minutes</span>
+                    <span className="text-teal-300 text-[11px]">We typically reply in minutes</span>
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors p-1">
+              <button onClick={() => setIsOpen(false)} className="text-teal-300 hover:text-white transition-colors p-1">
                 <Minimize2 size={18} />
               </button>
             </div>
@@ -201,12 +201,12 @@ const ChatWidget: React.FC = () => {
             {showIntro ? (
               /* Intro form */
               <div className="flex-1 flex flex-col items-center justify-center p-6">
-                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                  <MessageCircle size={28} className="text-blue-600" />
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: '#FFF8F0' }}>
+                  <MessageCircle size={28} style={{ color: '#F59E0B' }} />
                 </div>
-                <h3 className="text-lg font-bold text-[#0a192f] mb-1">Hi there!</h3>
+                <h3 className="text-lg font-bold mb-1" style={{ color: '#0D4B4D' }}>Hi there! 🐾</h3>
                 <p className="text-gray-500 text-sm text-center mb-6">
-                  Have a question about your shipment or need help? Start a conversation with us.
+                  Have a question about your pet's transport or need help? Chat with our team.
                 </p>
                 <div className="w-full space-y-3">
                   <input
@@ -214,19 +214,20 @@ const ChatWidget: React.FC = () => {
                     placeholder="Your name *"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none"
                   />
                   <input
                     type="email"
                     placeholder="Email (optional)"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none"
                   />
                   <button
                     onClick={startChat}
                     disabled={!name.trim() || loading}
-                    className="w-full py-2.5 bg-[#0a192f] text-white font-medium rounded-lg hover:bg-[#112d57] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+                    className="w-full py-2.5 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+                    style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}
                   >
                     {loading ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />}
                     {loading ? 'Connecting...' : 'Start Chat'}
@@ -260,9 +261,10 @@ const ChatWidget: React.FC = () => {
                         <div
                           className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                             msg.sender_type === 'visitor'
-                              ? 'bg-[#0a192f] text-white rounded-br-md'
+                              ? 'text-white rounded-br-md'
                               : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md shadow-sm'
                           }`}
+                          style={msg.sender_type === 'visitor' ? { background: 'linear-gradient(135deg,#0D4B4D,#0a3335)' } : {}}
                         >
                           {msg.content}
                         </div>
@@ -276,7 +278,7 @@ const ChatWidget: React.FC = () => {
                 </div>
 
                 {/* Input area */}
-                <div className="border-t border-gray-200 px-4 py-3 bg-white flex-shrink-0">
+                <div className="border-t border-amber-100 px-4 py-3 bg-white flex-shrink-0">
                   <div className="flex items-end gap-2">
                     <textarea
                       value={input}
@@ -284,13 +286,14 @@ const ChatWidget: React.FC = () => {
                       onKeyDown={handleKeyDown}
                       placeholder="Type a message..."
                       rows={1}
-                      className="flex-1 resize-none px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none max-h-20"
+                      className="flex-1 resize-none px-3.5 py-2.5 border border-amber-200 rounded-xl text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-200 outline-none max-h-20"
                       style={{ minHeight: '40px' }}
                     />
                     <button
                       onClick={sendMessage}
                       disabled={!input.trim() || sending}
-                      className="w-10 h-10 rounded-xl bg-[#0a192f] text-white flex items-center justify-center hover:bg-[#112d57] transition-colors disabled:opacity-40 flex-shrink-0"
+                      className="w-10 h-10 rounded-xl text-white flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}
                     >
                       <Send size={16} />
                     </button>
@@ -307,7 +310,8 @@ const ChatWidget: React.FC = () => {
         onClick={() => { setIsOpen(!isOpen); if (!isOpen) setUnread(0); }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-14 h-14 rounded-full bg-[#0a192f] text-white shadow-lg hover:shadow-xl flex items-center justify-center relative transition-shadow"
+        className="w-14 h-14 rounded-full text-white shadow-lg hover:shadow-xl flex items-center justify-center relative transition-shadow"
+        style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}
       >
         <AnimatePresence mode="wait">
           {isOpen ? (

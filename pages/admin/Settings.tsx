@@ -57,7 +57,7 @@ const Settings: React.FC = () => {
               </div>
               <div>
                 <p className="font-semibold text-[#0a192f]">Admin User</p>
-                <p className="text-sm text-gray-500">nexusroutegloballogistics@gmail.com</p>
+                <p className="text-sm text-gray-500">nextracepettransport@gmail.com</p>
                 <p className="text-xs text-gray-400 mt-1">Role: Super Administrator</p>
               </div>
             </div>
@@ -73,7 +73,7 @@ const Settings: React.FC = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Email</label>
-                <input type="email" defaultValue="nexusroutegloballogistics@gmail.com" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
+                <input type="email" defaultValue="nextracepettransport@gmail.com" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Phone</label>
@@ -206,11 +206,11 @@ const Settings: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Company Name</label>
-                <input type="text" defaultValue="NexusRoute Global Logistics" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
+                <input type="text" defaultValue="Next Trace Global Pet Transport" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Business Email</label>
-                <input type="email" defaultValue="nexusroutegloballogistics@gmail.com" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
+                <input type="email" defaultValue="nextracepettransport@gmail.com" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Business Phone</label>
@@ -226,7 +226,7 @@ const Settings: React.FC = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Website</label>
-                <input type="url" defaultValue="https://nexusroutegloballogistics.com" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
+                <input type="url" defaultValue="https://nextracepettransport.com" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-[#0a192f] focus:ring-1 focus:ring-[#0a192f] outline-none" />
               </div>
             </div>
           </div>

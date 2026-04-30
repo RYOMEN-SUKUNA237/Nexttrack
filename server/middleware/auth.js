@@ -16,20 +16,19 @@ async function authMiddleware(req, res, next) {
 
   const token = header.split(' ')[1];
   try {
-    // Verify using Supabase
+    // Verify using Supabase exclusively
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error || !user) {
-      // Fallback to local JWT (in case of legacy tokens or internal tokens)
-      const decoded = jwt.verify(token, SECRET, { algorithms: ['HS256'] });
-      req.user = decoded;
-    } else {
-      req.user = {
-        id: user.id,
-        email: user.email,
-        role: 'admin' // Supabase users are considered admins for the dashboard
-      };
+      return res.status(401).json({ error: 'Invalid or expired token.' });
     }
+    
+    req.user = {
+      id: user.id,
+      email: user.email,
+      full_name: (user.user_metadata?.full_name || 'Admin User').replace(/nexus global track/i, 'Next Trace Admin'),
+      role: 'admin' // Supabase users are considered admins for the dashboard
+    };
     
     next();
   } catch (err) {
@@ -37,12 +36,4 @@ async function authMiddleware(req, res, next) {
   }
 }
 
-function generateToken(user) {
-  return jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
-    SECRET,
-    { algorithm: 'HS256', expiresIn: '24h' }
-  );
-}
-
-module.exports = { authMiddleware, generateToken };
+module.exports = { authMiddleware };

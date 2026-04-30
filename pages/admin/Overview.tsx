@@ -1,137 +1,122 @@
-import React from 'react';
-import { 
-  Users, Package, Truck, CheckCircle, AlertCircle, Clock, TrendingUp, 
-  ArrowUpRight, ArrowDownRight, Activity, MapPin 
-} from 'lucide-react';
-import { Courier, Shipment } from './types';
+import React, { useEffect, useState } from 'react';
+import { PawPrint, Activity, CheckCircle, Pause, Users, Clock, TrendingUp, Heart } from 'lucide-react';
+import { getDashboardStats } from '../../services/api';
+import { speciesEmoji, statusColor } from './types';
 
-interface OverviewProps {
-  couriers: Courier[];
-  shipments: Shipment[];
-  onNavigate: (page: string) => void;
-}
+const Overview: React.FC = () => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-const Overview: React.FC<OverviewProps> = ({ couriers, shipments, onNavigate }) => {
-  const activeCouriers = couriers.filter(c => c.status === 'active' || c.status === 'on-delivery').length;
-  const inTransit = shipments.filter(s => s.status === 'in-transit' || s.status === 'out-for-delivery').length;
-  const delivered = shipments.filter(s => s.status === 'delivered').length;
-  const pending = shipments.filter(s => s.status === 'pending').length;
-  const paused = shipments.filter(s => s.isPaused).length;
+  useEffect(() => {
+    getDashboardStats().then(setData).catch(console.error).finally(() => setLoading(false));
+  }, []);
 
-  const stats = [
-    { label: 'Total Couriers', value: couriers.length.toString(), icon: <Users size={22} />, change: '+3 this week', up: true, color: 'bg-blue-50 text-blue-600' },
-    { label: 'Active Shipments', value: inTransit.toString(), icon: <Truck size={22} />, change: '+12 today', up: true, color: 'bg-emerald-50 text-emerald-600' },
-    { label: 'Delivered', value: delivered.toString(), icon: <CheckCircle size={22} />, change: '+8 today', up: true, color: 'bg-green-50 text-green-600' },
-    { label: 'Pending Pickup', value: pending.toString(), icon: <Clock size={22} />, change: 'Needs attention', up: false, color: 'bg-amber-50 text-amber-600' },
-  ];
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <PawPrint className="w-10 h-10 mx-auto animate-bounce mb-3" style={{ color: '#F59E0B' }} />
+        <p className="text-sm text-gray-500">Loading dashboard...</p>
+      </div>
+    </div>
+  );
 
-  const recentActivity = [
-    { text: 'Courier Marcus Johnson picked up shipment AT-8842-X9', time: '5 min ago', type: 'pickup' },
-    { text: 'Shipment AT-3291-K4 is out for delivery in Chicago', time: '12 min ago', type: 'delivery' },
-    { text: 'New courier Sofia Martinez registered', time: '1 hour ago', type: 'register' },
-    { text: 'Shipment AT-6645-Z1 paused — awaiting clearance', time: '2 hours ago', type: 'alert' },
-    { text: 'Shipment AT-1198-B7 delivered successfully', time: '3 hours ago', type: 'complete' },
-    { text: 'Courier David Okafor completed 891st delivery', time: '4 hours ago', type: 'milestone' },
+  const stats = data?.stats || {};
+  const cards = [
+    { label: 'Total Pets Registered', value: stats.totalPets ?? 0, icon: <PawPrint className="w-6 h-6" />, color: '#F59E0B', bg: '#FEF3C7' },
+    { label: 'Active Transports', value: stats.activeTransports ?? 0, icon: <Activity className="w-6 h-6" />, color: '#0D4B4D', bg: '#CCEBEB' },
+    { label: 'Delivered Safely', value: stats.delivered ?? 0, icon: <CheckCircle className="w-6 h-6" />, color: '#059669', bg: '#D1FAE5' },
+    { label: 'Currently Paused', value: stats.paused ?? 0, icon: <Pause className="w-6 h-6" />, color: '#DC2626', bg: '#FEE2E2' },
+    { label: 'Active Handlers', value: stats.totalHandlers ?? 0, icon: <Users className="w-6 h-6" />, color: '#7C3AED', bg: '#EDE9FE' },
+    { label: 'Pending Transport', value: stats.pendingTransports ?? 0, icon: <Clock className="w-6 h-6" />, color: '#D97706', bg: '#FEF3C7' },
+    { label: 'Pending Reviews', value: stats.pendingReviews ?? 0, icon: <TrendingUp className="w-6 h-6" />, color: '#0891B2', bg: '#CFFAFE' },
+    { label: 'Pending Quotes', value: stats.pendingQuotes ?? 0, icon: <Heart className="w-6 h-6" />, color: '#DB2777', bg: '#FCE7F3' },
   ];
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-white p-5 sm:p-6 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <div className={`p-2.5 rounded-lg ${stat.color}`}>{stat.icon}</div>
-              <span className={`text-xs font-medium flex items-center gap-0.5 ${stat.up ? 'text-green-600' : 'text-amber-600'}`}>
-                {stat.up ? <ArrowUpRight size={14} /> : <AlertCircle size={14} />}
-                {stat.change}
-              </span>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold mb-1" style={{ color: '#0D4B4D' }}>🐾 Dashboard Overview</h2>
+        <p className="text-sm text-gray-500">Live snapshot of all pet transports and registrations.</p>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {cards.map(c => (
+          <div key={c.label} className="rounded-2xl p-5 bg-white border border-amber-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: c.bg, color: c.color }}>
+                {c.icon}
+              </div>
             </div>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{stat.label}</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-[#0a192f]">{stat.value}</p>
+            <p className="text-2xl font-bold" style={{ color: '#0D4B4D' }}>{c.value}</p>
+            <p className="text-xs text-gray-500 mt-1">{c.label}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-gray-100 shadow-sm">
-          <div className="px-5 sm:px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h2 className="font-bold text-[#0a192f] flex items-center gap-2"><Activity size={18} /> Recent Activity</h2>
-            <span className="text-xs text-gray-400">Live</span>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {recentActivity.map((item, i) => (
-              <div key={i} className="px-5 sm:px-6 py-4 flex items-start gap-3 hover:bg-gray-50/50 transition-colors">
-                <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${
-                  item.type === 'alert' ? 'bg-amber-500' :
-                  item.type === 'complete' ? 'bg-green-500' :
-                  item.type === 'delivery' ? 'bg-blue-500' :
-                  item.type === 'register' ? 'bg-purple-500' :
-                  item.type === 'milestone' ? 'bg-emerald-500' :
-                  'bg-gray-400'
-                }`} />
+        {/* Recent Transports */}
+        <div className="lg:col-span-2 rounded-2xl bg-white border border-amber-100 shadow-sm p-5">
+          <h3 className="font-bold mb-4 text-sm uppercase tracking-wider" style={{ color: '#0D4B4D' }}>Recent Transports</h3>
+          <div className="space-y-3">
+            {(data?.recentTransports || []).map((t: any) => (
+              <div key={t.tracking_id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-amber-50 transition-colors">
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-amber-100 flex items-center justify-center text-xl">
+                  {t.photo_url ? <img src={t.photo_url} alt={t.pet_name} className="w-full h-full object-cover" /> : speciesEmoji(t.species)}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700">{item.text}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
+                  <p className="font-semibold text-sm truncate" style={{ color: '#0D4B4D' }}>
+                    {t.pet_name ? `${t.pet_name} (${t.species})` : t.cargo_type}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">{t.origin} → {t.destination}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(t.status)}`}>
+                    {t.status}
+                  </span>
+                  {t.is_paused && <span className="block text-xs text-red-500 mt-0.5">⏸ Paused</span>}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Quick Actions + Active Couriers */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-5 sm:p-6">
-            <h2 className="font-bold text-[#0a192f] mb-4">Quick Actions</h2>
-            <div className="space-y-2">
-              <button onClick={() => onNavigate('couriers')} className="w-full text-left px-4 py-3 bg-[#0a192f] text-white text-sm font-medium rounded-lg hover:bg-[#112d57] transition-colors flex items-center gap-2">
-                <Users size={16} /> Register New Courier
-              </button>
-              <button onClick={() => onNavigate('shipments')} className="w-full text-left px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2">
-                <Package size={16} /> Create Shipment
-              </button>
-              <button onClick={() => onNavigate('track-map')} className="w-full text-left px-4 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-                <MapPin size={16} /> View Live Map
-              </button>
-            </div>
-          </div>
-
-          {/* Paused Shipments Alert */}
-          {paused > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertCircle size={18} className="text-amber-600" />
-                <h3 className="font-semibold text-amber-800 text-sm">Paused Shipments</h3>
-              </div>
-              <p className="text-xs text-amber-700 mb-3">{paused} shipment(s) currently paused and need attention.</p>
-              <button onClick={() => onNavigate('track-map')} className="text-xs font-medium text-amber-800 underline hover:no-underline">
-                View on Map →
-              </button>
-            </div>
-          )}
-
-          {/* Top Couriers */}
-          <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-5 sm:p-6">
-            <h2 className="font-bold text-[#0a192f] mb-4 flex items-center gap-2">
-              <TrendingUp size={18} /> Top Couriers
-            </h2>
-            <div className="space-y-3">
-              {[...couriers].sort((a, b) => b.totalDeliveries - a.totalDeliveries).slice(0, 3).map((c) => (
-                <div key={c.id} className="flex items-center gap-3">
-                  <img src={c.avatar} alt={c.name} className="w-9 h-9 rounded-full object-cover" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#0a192f] truncate">{c.name}</p>
-                    <p className="text-xs text-gray-400">{c.totalDeliveries} deliveries</p>
+        {/* Species Breakdown */}
+        <div className="rounded-2xl bg-white border border-amber-100 shadow-sm p-5">
+          <h3 className="font-bold mb-4 text-sm uppercase tracking-wider" style={{ color: '#0D4B4D' }}>Species in Registry</h3>
+          <div className="space-y-3">
+            {(data?.speciesBreakdown || []).map((s: any) => (
+              <div key={s.species} className="flex items-center gap-3">
+                <span className="text-xl w-8 text-center">{speciesEmoji(s.species)}</span>
+                <div className="flex-1">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-medium" style={{ color: '#0D4B4D' }}>{s.species}</span>
+                    <span className="text-gray-500">{s.count}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-yellow-600 font-medium">
-                    ★ {c.rating}
+                  <div className="h-1.5 rounded-full bg-amber-100 overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, (s.count / Math.max(...(data?.speciesBreakdown || []).map((x: any) => Number(x.count)))) * 100)}%`, background: 'linear-gradient(90deg, #F59E0B, #D97706)' }} />
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
+        </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="rounded-2xl bg-white border border-amber-100 shadow-sm p-5">
+        <h3 className="font-bold mb-4 text-sm uppercase tracking-wider" style={{ color: '#0D4B4D' }}>Recent Notifications</h3>
+        <div className="space-y-2">
+          {(data?.notifications || []).slice(0, 5).map((n: any) => (
+            <div key={n.id} className={`flex items-start gap-3 p-3 rounded-xl ${n.is_read ? 'opacity-60' : ''}`}
+              style={{ background: n.type === 'warning' ? '#FEF3C7' : n.type === 'success' ? '#D1FAE5' : '#F0FAFA' }}>
+              <span className="text-lg">{n.type === 'warning' ? '⚠️' : n.type === 'success' ? '✅' : 'ℹ️'}</span>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: '#0D4B4D' }}>{n.title}</p>
+                <p className="text-xs text-gray-500">{n.message}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

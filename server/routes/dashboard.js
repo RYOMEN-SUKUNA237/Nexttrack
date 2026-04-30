@@ -1,52 +1,55 @@
 const express = require('express');
 const { pool } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
-
 const router = express.Router();
 
-// GET /api/dashboard/stats — Overview statistics
+// GET /api/dashboard/stats
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
-    const { rows: [stats] } = await pool.query(`
-      SELECT
-        (SELECT COUNT(*) FROM couriers) as "totalCouriers",
-        (SELECT COUNT(*) FROM couriers WHERE status IN ('active', 'on-delivery')) as "activeCouriers",
-        (SELECT COUNT(*) FROM shipments) as "totalShipments",
-        (SELECT COUNT(*) FROM shipments WHERE status IN ('in-transit', 'out-for-delivery')) as "inTransit",
-        (SELECT COUNT(*) FROM shipments WHERE status = 'delivered') as delivered,
-        (SELECT COUNT(*) FROM shipments WHERE status = 'pending') as pending,
-        (SELECT COUNT(*) FROM shipments WHERE is_paused = TRUE) as paused,
-        (SELECT COUNT(*) FROM shipments WHERE status = 'returned') as returned,
-        (SELECT COUNT(*) FROM customers) as "totalCustomers"
+    const [
+      totalPets, activeTransports, delivered, paused,
+      totalHandlers, pendingTransports, reviews, quotes
+    ] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM pets'),
+      pool.query("SELECT COUNT(*) FROM shipments WHERE status IN ('in-transit','out-for-delivery','picked-up')"),
+      pool.query("SELECT COUNT(*) FROM shipments WHERE status = 'delivered'"),
+      pool.query("SELECT COUNT(*) FROM shipments WHERE is_paused = TRUE"),
+      pool.query("SELECT COUNT(*) FROM couriers WHERE status != 'inactive'"),
+      pool.query("SELECT COUNT(*) FROM shipments WHERE status = 'pending'"),
+      pool.query("SELECT COUNT(*) FROM reviews WHERE status = 'pending'"),
+      pool.query("SELECT COUNT(*) FROM quotes WHERE status = 'pending'"),
+    ]);
+
+    const { rows: recentTransports } = await pool.query(`
+      SELECT s.tracking_id, s.status, s.origin, s.destination, s.estimated_delivery, s.cargo_type,
+             s.is_paused, p.name as pet_name, p.species, p.breed, p.photo_url
+      FROM shipments s
+      LEFT JOIN pets p ON s.pet_id = p.pet_id
+      ORDER BY s.created_at DESC LIMIT 6
     `);
 
-    // Today's stats
-    const today = new Date().toISOString().split('T')[0];
-    const { rows: [todayStats] } = await pool.query(`
-      SELECT
-        (SELECT COUNT(*) FROM shipments WHERE status = 'delivered' AND actual_delivery = $1) as "deliveredToday",
-        (SELECT COUNT(*) FROM shipments WHERE created_at::date = $1::date) as "createdToday",
-        (SELECT COUNT(*) FROM couriers WHERE created_at::date = $1::date) as "couriersRegisteredToday"
-    `, [today]);
+    const { rows: speciesBreakdown } = await pool.query(`
+      SELECT species, COUNT(*) as count FROM pets GROUP BY species ORDER BY count DESC
+    `);
 
-    // Convert string counts to numbers
-    const toNum = (v) => parseInt(v) || 0;
+    const { rows: notifications } = await pool.query(
+      'SELECT * FROM notifications ORDER BY created_at DESC LIMIT 10'
+    );
 
     res.json({
       stats: {
-        totalCouriers: toNum(stats.totalCouriers),
-        activeCouriers: toNum(stats.activeCouriers),
-        totalShipments: toNum(stats.totalShipments),
-        inTransit: toNum(stats.inTransit),
-        delivered: toNum(stats.delivered),
-        pending: toNum(stats.pending),
-        paused: toNum(stats.paused),
-        returned: toNum(stats.returned),
-        totalCustomers: toNum(stats.totalCustomers),
-        deliveredToday: toNum(todayStats.deliveredToday),
-        createdToday: toNum(todayStats.createdToday),
-        couriersRegisteredToday: toNum(todayStats.couriersRegisteredToday),
+        totalPets: parseInt(totalPets.rows[0].count),
+        activeTransports: parseInt(activeTransports.rows[0].count),
+        delivered: parseInt(delivered.rows[0].count),
+        paused: parseInt(paused.rows[0].count),
+        totalHandlers: parseInt(totalHandlers.rows[0].count),
+        pendingTransports: parseInt(pendingTransports.rows[0].count),
+        pendingReviews: parseInt(reviews.rows[0].count),
+        pendingQuotes: parseInt(quotes.rows[0].count),
       },
+      recentTransports,
+      speciesBreakdown,
+      notifications,
     });
   } catch (err) {
     console.error('Dashboard stats error:', err);
@@ -54,86 +57,31 @@ router.get('/stats', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/dashboard/recent-activity — Recent tracking events
-router.get('/recent-activity', authMiddleware, async (req, res) => {
+// GET /api/dashboard/active-map — Active transports for map
+router.get('/active-map', authMiddleware, async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 20;
-
-    const { rows: activity } = await pool.query(`
-      SELECT th.*, s.sender_name, s.receiver_name, s.origin, s.destination
-      FROM tracking_history th
-      LEFT JOIN shipments s ON th.shipment_id = s.id
-      ORDER BY th.created_at DESC
-      LIMIT $1
-    `, [limit]);
-
-    res.json({ activity });
+    const { rows } = await pool.query(`
+      SELECT s.tracking_id, s.status, s.origin, s.destination,
+             s.origin_lat, s.origin_lng, s.dest_lat, s.dest_lng,
+             s.current_lat, s.current_lng, s.is_paused, s.cargo_type, s.transport_type,
+             p.name as pet_name, p.species, p.breed
+      FROM shipments s
+      LEFT JOIN pets p ON s.pet_id = p.pet_id
+      WHERE s.status IN ('in-transit','out-for-delivery','picked-up')
+    `);
+    res.json({ transports: rows });
   } catch (err) {
-    console.error('Recent activity error:', err);
+    console.error('Active map error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// GET /api/dashboard/top-couriers — Leaderboard
-router.get('/top-couriers', authMiddleware, async (req, res) => {
-  try {
-    const { rows: couriers } = await pool.query('SELECT id, courier_id, name, avatar, total_deliveries, rating, status FROM couriers ORDER BY total_deliveries DESC LIMIT 10');
-    res.json({ couriers });
-  } catch (err) {
-    console.error('Top couriers error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-// GET /api/dashboard/notifications — List notifications
-router.get('/notifications', authMiddleware, async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 20;
-    const { rows: notifications } = await pool.query('SELECT * FROM notifications ORDER BY created_at DESC LIMIT $1', [limit]);
-    const { rows: [{ count }] } = await pool.query('SELECT COUNT(*) as count FROM notifications WHERE is_read = FALSE');
-    res.json({ notifications, unreadCount: parseInt(count) });
-  } catch (err) {
-    console.error('Notifications error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-// PATCH /api/dashboard/notifications/:id/read — Mark notification as read
+// PATCH /api/dashboard/notifications/:id/read
 router.patch('/notifications/:id/read', authMiddleware, async (req, res) => {
   try {
     await pool.query('UPDATE notifications SET is_read = TRUE WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Notification marked as read.' });
+    res.json({ message: 'Marked as read.' });
   } catch (err) {
-    console.error('Mark notification read error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-// PATCH /api/dashboard/notifications/read-all — Mark all as read
-router.patch('/notifications/read-all', authMiddleware, async (req, res) => {
-  try {
-    await pool.query('UPDATE notifications SET is_read = TRUE WHERE is_read = FALSE');
-    res.json({ message: 'All notifications marked as read.' });
-  } catch (err) {
-    console.error('Mark all read error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
-
-// GET /api/dashboard/active-map — Active shipments for map display
-router.get('/active-map', authMiddleware, async (req, res) => {
-  try {
-    const { rows: shipments } = await pool.query(`
-      SELECT s.*, c.name as courier_name, c.phone as courier_phone, c.avatar as courier_avatar
-      FROM shipments s
-      LEFT JOIN couriers c ON s.courier_id = c.courier_id
-      WHERE s.status IN ('in-transit', 'out-for-delivery', 'paused')
-      ORDER BY s.updated_at DESC
-    `);
-
-    res.json({ shipments });
-  } catch (err) {
-    console.error('Active map error:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });

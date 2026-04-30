@@ -12,9 +12,9 @@ import mapboxgl from 'mapbox-gl';
 import { MAPBOX_TOKEN, initMapbox, interpolateAlongRoute, formatDistance, formatDuration, computeTimeBasedProgress, computeTimeRemaining, getRouteWithFallback, ROUTE_STYLE, calculatePositionAtTime } from '../../utils/mapbox';
 
 interface TrackMapProps {
-  shipments: Shipment[];
-  setShipments: React.Dispatch<React.SetStateAction<Shipment[]>>;
-  onRefresh: () => void;
+  shipments?: Shipment[];
+  setShipments?: React.Dispatch<React.SetStateAction<Shipment[]>>;
+  onRefresh?: () => void;
 }
 
 const statusColors: Record<string, string> = {
@@ -26,7 +26,7 @@ const statusColors: Record<string, string> = {
   'delivered': '#10b981',
 };
 
-const TrackMap: React.FC<TrackMapProps> = ({ shipments, setShipments, onRefresh }) => {
+const TrackMap: React.FC<TrackMapProps> = ({ onRefresh: externalRefresh }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
@@ -46,15 +46,45 @@ const TrackMap: React.FC<TrackMapProps> = ({ shipments, setShipments, onRefresh 
   const [pauseCustomReason, setPauseCustomReason] = useState('');
   const [pauseSubmitting, setPauseSubmitting] = useState(false);
 
-  const activeShipments = shipments.filter(s =>
+  const [internalShipments, setInternalShipments] = useState<Shipment[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const activeShipments = internalShipments.filter(s =>
     ['in-transit', 'out-for-delivery', 'paused', 'picked-up'].includes(s.status)
   );
+
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+    if (externalRefresh) externalRefresh();
+  };
 
   // Fetch full shipment data (with route_data) from API, then fetch missing routes
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const res = await api.shipments.list({ limit: 100 });
+        const [res, couriersRes] = await Promise.all([
+          api.shipments.list({ limit: '100' }),
+          api.couriers.list({ limit: '200' })
+        ]);
+
+        const couriersMap = couriersRes.couriers.reduce((acc: any, c: any) => {
+          acc[c.courier_id] = c.name;
+          return acc;
+        }, {});
+
+        const mappedShipments: Shipment[] = res.shipments.map((s: any) => ({
+          ...s,
+          id: s.id.toString(),
+          trackingId: s.tracking_id,
+          courierName: couriersMap[s.courier_id] || 'Unassigned',
+          type: s.cargo_type,
+          isPaused: !!s.is_paused,
+          pauseCategory: s.pause_category,
+          pauseReason: s.pause_reason,
+        }));
+
+        setInternalShipments(mappedShipments);
+
         const dataMap: Record<string, any> = {};
         for (const s of res.shipments) {
           dataMap[s.tracking_id] = {
@@ -85,7 +115,7 @@ const TrackMap: React.FC<TrackMapProps> = ({ shipments, setShipments, onRefresh 
       }
     };
     fetchRoutes();
-  }, [shipments]);
+  }, [refreshTrigger]);
 
   // Live progress + ETA ticker — recomputes every 2 seconds
   useEffect(() => {
@@ -369,7 +399,7 @@ const TrackMap: React.FC<TrackMapProps> = ({ shipments, setShipments, onRefresh 
   const handleResume = async (shipment: Shipment) => {
     try {
       await api.shipments.togglePause(shipment.trackingId);
-      onRefresh();
+      handleRefresh();
     } catch (err: any) {
       alert(err.message || 'Failed to resume.');
     }
@@ -385,7 +415,7 @@ const TrackMap: React.FC<TrackMapProps> = ({ shipments, setShipments, onRefresh 
         pause_reason: pauseCustomReason.trim() || undefined,
       });
       setPauseModalShipment(null);
-      onRefresh();
+      handleRefresh();
     } catch (err: any) {
       alert(err.message || 'Failed to pause.');
     } finally {
@@ -425,7 +455,7 @@ const TrackMap: React.FC<TrackMapProps> = ({ shipments, setShipments, onRefresh 
           <button onClick={fitAllMarkers} className="flex items-center gap-1.5 text-xs bg-white px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium transition-colors">
             <LocateFixed size={14} /> Fit All
           </button>
-          <button onClick={onRefresh} className="flex items-center gap-1.5 text-xs bg-white px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium transition-colors">
+          <button onClick={handleRefresh} className="flex items-center gap-1.5 text-xs bg-white px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium transition-colors">
             <RefreshCw size={14} /> Refresh
           </button>
           <span className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 font-medium">

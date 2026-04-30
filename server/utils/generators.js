@@ -13,7 +13,7 @@ function generateTrackingId() {
   const num = Math.floor(1000 + Math.random() * 9000);
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const suffix = chars.charAt(Math.floor(Math.random() * chars.length)) + Math.floor(Math.random() * 10);
-  return `AT-${num}-${suffix}`;
+  return `PT-${num}-${suffix}`;
 }
 
 function generateCustomerId() {
