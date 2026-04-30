@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const COMPANY_NAME = 'Next Trace Global Pet Transport';
+const COMPANY_NAME = 'Next Track Global Pet Transport';
 const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'nextracepettransport@gmail.com';
 const COMPANY_PHONE = '202-846-4800';
 const COMPANY_ADDRESS = 'Atlanta, GA';

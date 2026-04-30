@@ -174,7 +174,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}>
                   <PawPrint className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold">Next Trace</span>
+                <span className="text-xl font-bold">Next Track</span>
               </div>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#B2D8D8' }}>
                 The world's most trusted pet transport & tracking platform. Every paw matters, every journey is monitored.
@@ -226,7 +226,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
         <div className="border-t" style={{ borderColor: 'rgba(245,158,11,0.2)' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs" style={{ color: '#6B9999' }}>
-            <p>© {new Date().getFullYear()} Next Trace Global Pet Transport. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Next Track Global Pet Transport. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="hover:text-amber-400 transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-amber-400 transition-colors">Terms of Service</a>

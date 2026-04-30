@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const { pool } = require('./db');
 
 async function seed() {
-  console.log('🐾 Seeding PawTrack database...\n');
+  console.log('🐾 Seeding Next Track database...\n');
 
   // ─── DROP OLD TABLES ──────────────────────────────────────────────
   await pool.query(`
@@ -250,17 +250,17 @@ async function seed() {
   const hash = await bcrypt.hash('admin123', 12);
   await pool.query(
     'INSERT INTO users (username, email, password, full_name, phone, role) VALUES ($1, $2, $3, $4, $5, $6)',
-    ['admin', 'admin@pawtrack.com', hash, 'PawTrack Admin', '+1 (800) 555-PAWS', 'admin']
+    ['admin', 'admin@Next Track.com', hash, 'Next Track Admin', '+1 (800) 555-PAWS', 'admin']
   );
   console.log('✅ Admin user created (username: admin, password: admin123)');
 
   // ─── COURIERS (Handlers) ──────────────────────────────────────────
   const couriers = [
-    ['PT-HDL-7X92KP', 'Marcus Rivera', 'marcus@pawtrack.com', '+1 555-0101', 'climate-van', 'TX-4821-MR', 'Southeast Region', 'active', 245, 4.9, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fm=jpg&fit=crop&w=100&q=80', 'Large Animals', 'dogs,cats,horses'],
-    ['PT-HDL-3B81NQ', 'Sofia Chen', 'sofia@pawtrack.com', '+1 555-0102', 'pet-van', 'TX-1192-SC', 'Northeast Region', 'active', 378, 4.8, 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?fm=jpg&fit=crop&w=100&q=80', 'Small Animals & Exotics', 'cats,birds,reptiles,small-mammals'],
-    ['PT-HDL-9D44RL', 'Emily Nguyen', 'emily@pawtrack.com', '+1 555-0103', 'air-cargo', 'N/A', 'West Coast', 'on-delivery', 156, 4.7, 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?fm=jpg&fit=crop&w=100&q=80', 'Air Transport Specialist', 'dogs,cats,birds'],
-    ['PT-HDL-5F27WT', 'David Okafor', 'david@pawtrack.com', '+1 555-0104', 'livestock-truck', 'TX-6654-DO', 'Midwest Region', 'active', 512, 4.9, 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?fm=jpg&fit=crop&w=100&q=80', 'Livestock & Equine', 'horses,cattle,livestock'],
-    ['PT-HDL-2H65YM', 'Sarah Williams', 'sarah@pawtrack.com', '+1 555-0105', 'pet-van', 'TX-3347-SW', 'Central Region', 'on-break', 89, 4.6, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?fm=jpg&fit=crop&w=100&q=80', 'Domestic Pets', 'dogs,cats,small-mammals'],
+    ['PT-HDL-7X92KP', 'Marcus Rivera', 'marcus@Next Track.com', '+1 555-0101', 'climate-van', 'TX-4821-MR', 'Southeast Region', 'active', 245, 4.9, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fm=jpg&fit=crop&w=100&q=80', 'Large Animals', 'dogs,cats,horses'],
+    ['PT-HDL-3B81NQ', 'Sofia Chen', 'sofia@Next Track.com', '+1 555-0102', 'pet-van', 'TX-1192-SC', 'Northeast Region', 'active', 378, 4.8, 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?fm=jpg&fit=crop&w=100&q=80', 'Small Animals & Exotics', 'cats,birds,reptiles,small-mammals'],
+    ['PT-HDL-9D44RL', 'Emily Nguyen', 'emily@Next Track.com', '+1 555-0103', 'air-cargo', 'N/A', 'West Coast', 'on-delivery', 156, 4.7, 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?fm=jpg&fit=crop&w=100&q=80', 'Air Transport Specialist', 'dogs,cats,birds'],
+    ['PT-HDL-5F27WT', 'David Okafor', 'david@Next Track.com', '+1 555-0104', 'livestock-truck', 'TX-6654-DO', 'Midwest Region', 'active', 512, 4.9, 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?fm=jpg&fit=crop&w=100&q=80', 'Livestock & Equine', 'horses,cattle,livestock'],
+    ['PT-HDL-2H65YM', 'Sarah Williams', 'sarah@Next Track.com', '+1 555-0105', 'pet-van', 'TX-3347-SW', 'Central Region', 'on-break', 89, 4.6, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?fm=jpg&fit=crop&w=100&q=80', 'Domestic Pets', 'dogs,cats,small-mammals'],
   ];
   for (const c of couriers) {
     await pool.query(
@@ -380,7 +380,7 @@ async function seed() {
   }
   console.log(`✅ ${notifs.length} notifications created.`);
 
-  console.log('\n🎉 PawTrack database seeded successfully!');
+  console.log('\n🎉 Next Track database seeded successfully!');
   console.log('──────────────────────────────────────');
   console.log('Admin Login:  username: admin  |  password: admin123');
   console.log('──────────────────────────────────────\n');

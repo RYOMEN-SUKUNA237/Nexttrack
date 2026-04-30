@@ -6,7 +6,7 @@ import { submitQuote, submitReview } from '../services/api';
 
 const previewReviews = [
   { name: 'Jennifer Adams', role: 'Dog Owner · Golden Retriever', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?fm=jpg&fit=crop&w=100&q=80', text: 'Buddy arrived happy and healthy! The comfort check updates every 2 hours gave me so much peace of mind. Truly exceptional service.', rating: 5 },
-  { name: 'Dr. Sarah Lin', role: 'Happy Tails Rescue · Director', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?fm=jpg&fit=crop&w=100&q=80', text: 'We use PawTrack for all our rescue animal transports. Professional, caring, and the real-time tracking is incredible.', rating: 5 },
+  { name: 'Dr. Sarah Lin', role: 'Happy Tails Rescue · Director', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?fm=jpg&fit=crop&w=100&q=80', text: 'We use Next Track for all our rescue animal transports. Professional, caring, and the real-time tracking is incredible.', rating: 5 },
   { name: 'Mike Torres', role: 'Equine Breeder · Michigan', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fm=jpg&fit=crop&w=100&q=80', text: 'Thunder made the cross-country trip perfectly. The equine specialist handlers were knowledgeable and Thunder arrived calm.', rating: 5 },
 ];
 

@@ -203,7 +203,7 @@ router.post('/admin/reply', authMiddleware, async (req, res) => {
     const { rows: convRows } = await pool.query('SELECT * FROM conversations WHERE id = $1', [conversation_id]);
     if (!convRows[0]) return res.status(404).json({ error: 'Conversation not found.' });
 
-    const adminName = 'Next Trace Support';
+    const adminName = 'Next Track Support';
 
     const { rows: inserted } = await pool.query(
       `INSERT INTO messages (conversation_id, sender_type, sender_name, content, is_read)

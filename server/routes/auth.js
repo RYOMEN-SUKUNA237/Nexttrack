@@ -35,7 +35,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: data.user.id,
         email: data.user.email,
-        full_name: (data.user.user_metadata?.full_name || 'Admin User').replace(/nexus global track/i, 'Next Trace Admin'),
+        full_name: (data.user.user_metadata?.full_name || 'Admin User').replace(/nexus global track/i, 'Next Track Admin'),
         role: 'admin'
       },
       token: data.session.access_token

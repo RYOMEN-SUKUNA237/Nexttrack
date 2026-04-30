@@ -25,7 +25,7 @@ app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (origin.startsWith('http://localhost:')) return cb(null, true);
-    if (origin.includes('pawtrack.com')) return cb(null, true);
+    if (origin.includes('Next Track.com')) return cb(null, true);
     if (origin.includes('vercel.app')) return cb(null, true);
     if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return cb(null, true);
     cb(new Error('Blocked by CORS'));
@@ -60,7 +60,7 @@ app.use('/api/quotes', publicLimiter, quoteRoutes);
 app.use('/api/reviews', publicLimiter, reviewRoutes);
 app.use('/api/emails', emailRoutes);
 
-app.get('/', (req, res) => res.json({ name: 'PawTrack API', status: 'running' }));
+app.get('/', (req, res) => res.json({ name: 'Next Track API', status: 'running' }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
@@ -72,7 +72,7 @@ app.use((err, req, res, next) => {
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`\n🐾 PawTrack API running on http://localhost:${PORT}`);
+    console.log(`\n🐾 Next Track API running on http://localhost:${PORT}`);
     console.log(`📊 Health: http://localhost:${PORT}/api/health\n`);
   });
 }

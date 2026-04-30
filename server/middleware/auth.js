@@ -26,7 +26,7 @@ async function authMiddleware(req, res, next) {
     req.user = {
       id: user.id,
       email: user.email,
-      full_name: (user.user_metadata?.full_name || 'Admin User').replace(/nexus global track/i, 'Next Trace Admin'),
+      full_name: (user.user_metadata?.full_name || 'Admin User').replace(/nexus global track/i, 'Next Track Admin'),
       role: 'admin' // Supabase users are considered admins for the dashboard
     };
     

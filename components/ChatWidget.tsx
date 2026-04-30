@@ -186,7 +186,7 @@ const ChatWidget: React.FC = () => {
                   <Headphones size={18} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-semibold text-sm">Next Trace Pet Support</p>
+                  <p className="text-white font-semibold text-sm">Next Track Pet Support</p>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                     <span className="text-teal-300 text-[11px]">We typically reply in minutes</span>

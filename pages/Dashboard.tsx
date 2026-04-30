@@ -95,7 +95,7 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFF8F0' }}>
       <div className="text-center">
         <PawPrint className="w-10 h-10 mx-auto animate-bounce mb-3" style={{ color: '#F59E0B' }} />
-        <p className="text-sm text-gray-400">Loading Next Trace...</p>
+        <p className="text-sm text-gray-400">Loading Next Track...</p>
       </div>
     </div>
   );
@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <PawPrint className="w-8 h-8" style={{ color: '#F59E0B' }} />
           </div>
-          <h1 className="text-2xl font-bold text-white">Next Trace Admin</h1>
+          <h1 className="text-2xl font-bold text-white">Next Track Admin</h1>
           <p className="text-amber-100 text-sm mt-1">Pet Transport Management Portal</p>
         </div>
 
@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
             className="w-full py-3 text-white font-semibold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-md"
             style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
             {loginLoading ? <Loader2 size={18} className="animate-spin" /> : <PawPrint size={18} />}
-            {loginLoading ? 'Signing in...' : 'Sign In to Next Trace'}
+            {loginLoading ? 'Signing in...' : 'Sign In to Next Track'}
           </button>
           <p className="text-center text-xs text-gray-400">Authorized personnel only.</p>
         </form>
@@ -178,7 +178,7 @@ const Dashboard: React.FC = () => {
               <PawPrint className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-white font-bold text-base tracking-tight">Next Trace</span>
+              <span className="text-white font-bold text-base tracking-tight">Next Track</span>
               <p className="text-teal-400 text-xs leading-tight">Admin Portal</p>
             </div>
           </Link>
@@ -238,7 +238,7 @@ const Dashboard: React.FC = () => {
               </button>
               <div>
                 <h1 className="text-lg font-bold" style={{ color: '#0D4B4D' }}>{currentLabel}</h1>
-                <p className="text-xs text-gray-400 hidden sm:block">Next Trace Pet Transport Admin</p>
+                <p className="text-xs text-gray-400 hidden sm:block">Next Track Pet Transport Admin</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

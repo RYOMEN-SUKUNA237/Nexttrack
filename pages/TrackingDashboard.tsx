@@ -160,7 +160,7 @@ const TrackingDashboard: React.FC = () => {
           <p className="text-gray-500 mb-6">{error || `No transport found for ID "${trackingId}".`}</p>
           <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold"
             style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
-            <PawPrint size={18} /> Back to Next Trace
+            <PawPrint size={18} /> Back to Next Track
           </Link>
         </div>
       </div>
@@ -183,7 +183,7 @@ const TrackingDashboard: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <PawPrint className="w-5 h-5 text-amber-400" />
-                    <span className="text-amber-400 text-sm font-semibold uppercase tracking-wide">Next Trace</span>
+                    <span className="text-amber-400 text-sm font-semibold uppercase tracking-wide">Next Track</span>
                   </div>
                   <p className="text-teal-300 text-sm mb-1">Tracking ID</p>
                   <h1 className="text-2xl sm:text-3xl font-bold font-mono text-white">{t.tracking_id}</h1>
@@ -368,12 +368,12 @@ const TrackingDashboard: React.FC = () => {
             )}
             <p className="text-sm text-gray-500 flex items-center justify-center gap-2">
               <Heart size={14} className="text-red-400" />
-              Your pet is in certified caring hands with Next Trace.
+              Your pet is in certified caring hands with Next Track.
               <Shield size={14} className="text-teal-600" />
             </p>
             <Link to="/" className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 rounded-xl text-white font-semibold text-sm"
               style={{ background: 'linear-gradient(135deg,#0D4B4D,#0a3335)' }}>
-              <PawPrint size={16} /> Back to Next Trace <ChevronRight size={14} />
+              <PawPrint size={16} /> Back to Next Track <ChevronRight size={14} />
             </Link>
           </motion.div>
 

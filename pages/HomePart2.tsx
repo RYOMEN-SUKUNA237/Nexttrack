@@ -78,7 +78,7 @@ export const WhyUsSection: React.FC = () => (
       <Reveal direction="bottom">
         <div className="text-center mb-14">
           <div className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4" style={{ background: '#FEF3C7', color: '#D97706' }}>
-            Why PawTrack
+            Why Next Track
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: '#0D4B4D' }}>Your Pet Deserves the Best Care</h2>
           <p className="text-gray-500 max-w-xl mx-auto">We go beyond shipping — we care for your pet as if it were our own.</p>
