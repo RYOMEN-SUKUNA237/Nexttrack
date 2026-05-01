@@ -132,7 +132,7 @@ export const messages = {
     return req<any>(`/messages/admin/conversations${buildQuery(params)}`);
   },
   adminGetConversation: (id: number | string) => req<any>(`/messages/admin/conversations/${id}`),
-  adminReply: (data: { conversation_id: number | string; content: string }) => req<any>(`/messages/admin/conversations/${data.conversation_id}/reply`, { method: 'POST', body: JSON.stringify({ body: data.content }) }),
+  adminReply: (data: { conversation_id: number | string; content: string }) => req<any>(`/messages/admin/reply`, { method: 'POST', body: JSON.stringify({ conversation_id: data.conversation_id, content: data.content }) }),
   adminCloseConversation: (id: number | string) => req<any>(`/messages/admin/conversations/${id}/close`, { method: 'PATCH' }),
   adminReopenConversation: (id: number | string) => req<any>(`/messages/admin/conversations/${id}/reopen`, { method: 'PATCH' }),
 };
