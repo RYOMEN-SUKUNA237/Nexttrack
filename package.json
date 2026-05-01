@@ -2,7 +2,6 @@
   "name": "aura-track",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "concurrently -n \"API,WEB\" -c \"cyan,magenta\" \"cd server && npm run dev\" \"vite\"",
     "dev:web": "vite",
