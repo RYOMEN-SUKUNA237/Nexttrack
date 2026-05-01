@@ -1,15 +1,26 @@
 const { Pool } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ FATAL: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.');
+  console.error('   On Vercel: add them in Project Settings → Environment Variables.');
+  console.error('   Locally:   check server/.env exists and has the correct values.');
+  process.exit(1);
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-// Test connection on startup
+// Test DB connection on startup
 pool.query('SELECT NOW()')
   .then(() => console.log('✅ Connected to Supabase PostgreSQL'))
   .catch(err => console.error('❌ PostgreSQL connection error:', err.message));
