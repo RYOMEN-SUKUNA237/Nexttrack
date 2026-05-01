@@ -27,10 +27,15 @@ export const getToken = () => localStorage.getItem('pt_token');
 export const setToken = (t: string) => localStorage.setItem('pt_token', t);
 export const removeToken = () => localStorage.removeItem('pt_token');
 
+const buildQuery = (params?: Record<string, any>) => {
+  if (!params) return '';
+  const clean = Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== undefined));
+  return Object.keys(clean).length > 0 ? '?' + new URLSearchParams(clean).toString() : '';
+};
+
 // ─── Pets ──────────────────────────────────────────────────────────────────
 export const listPets = (params?: Record<string, string>) => {
-  const q = params ? '?' + new URLSearchParams(params).toString() : '';
-  return req<{ pets: any[]; pagination: any }>(`/pets${q}`);
+  return req<{ pets: any[]; pagination: any }>(`/pets${buildQuery(params)}`);
 };
 export const getPet = (id: string) => req<{ pet: any; transports: any[] }>(`/pets/${id}`);
 export const createPet = (data: any) => req<{ pet: any }>('/pets', { method: 'POST', body: JSON.stringify(data) });
@@ -39,8 +44,7 @@ export const deletePet = (id: string) => req<{ message: string }>(`/pets/${id}`,
 
 // ─── Transports (Shipments) ────────────────────────────────────────────────
 export const listTransports = (params?: Record<string, string>) => {
-  const q = params ? '?' + new URLSearchParams(params).toString() : '';
-  return req<{ shipments: any[]; pagination: any }>(`/shipments${q}`);
+  return req<{ shipments: any[]; pagination: any }>(`/shipments${buildQuery(params)}`);
 };
 export const getTransport = (id: string) => req<{ shipment: any; history: any[]; courier: any }>(`/shipments/${id}`);
 export const createTransport = (data: any) => req<{ shipment: any }>('/shipments', { method: 'POST', body: JSON.stringify(data) });
@@ -69,8 +73,7 @@ export const trackPet = (trackingId: string) =>
 
 // ─── Handlers (Couriers) ──────────────────────────────────────────────────
 export const listHandlers = (params?: Record<string, string>) => {
-  const q = params ? '?' + new URLSearchParams(params).toString() : '';
-  return req<{ couriers: any[]; pagination: any }>(`/couriers${q}`);
+  return req<{ couriers: any[]; pagination: any }>(`/couriers${buildQuery(params)}`);
 };
 export const createHandler = (data: any) => req<{ courier: any }>('/couriers', { method: 'POST', body: JSON.stringify(data) });
 export const updateHandler = (id: string, data: any) => req<{ courier: any }>(`/couriers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -78,8 +81,7 @@ export const deleteHandler = (id: string) => req<{ message: string }>(`/couriers
 
 // ─── Customers / Owners ───────────────────────────────────────────────────
 export const listOwners = (params?: Record<string, string>) => {
-  const q = params ? '?' + new URLSearchParams(params).toString() : '';
-  return req<{ customers: any[]; pagination: any }>(`/customers${q}`);
+  return req<{ customers: any[]; pagination: any }>(`/customers${buildQuery(params)}`);
 };
 export const createOwner = (data: any) => req<{ customer: any }>('/customers', { method: 'POST', body: JSON.stringify(data) });
 export const deleteOwner = (id: string) => req<{ message: string }>(`/customers/${id}`, { method: 'DELETE' });
@@ -127,8 +129,7 @@ export const messages = {
   send: (data: any) => sendMessage(data.conversation_id, data.content, data.sender_name, data.sender_type),
   getMessages: (id: number | string) => req<any>(`/messages/conversations/${id}/messages`),
   adminListConversations: (params?: any) => {
-    const q = params ? '?' + new URLSearchParams(params).toString() : '';
-    return req<any>(`/messages/admin/conversations${q}`);
+    return req<any>(`/messages/admin/conversations${buildQuery(params)}`);
   },
   adminGetConversation: (id: number | string) => req<any>(`/messages/admin/conversations/${id}`),
   adminReply: (data: { conversation_id: number | string; content: string }) => req<any>(`/messages/admin/conversations/${data.conversation_id}/reply`, { method: 'POST', body: JSON.stringify({ body: data.content }) }),
@@ -138,8 +139,7 @@ export const messages = {
 
 export const quotes = {
   adminList: (params?: any) => {
-    const q = params ? '?' + new URLSearchParams(params).toString() : '';
-    return req<any>(`/quotes/admin${q}`);
+    return req<any>(`/quotes/admin${buildQuery(params)}`);
   },
   adminStats: () => req<any>('/quotes/admin/stats'),
   adminGet: (id: string) => req<any>(`/quotes/admin/${id}`),
@@ -150,8 +150,7 @@ export const quotes = {
 
 export const reviews = {
   adminList: (params?: any) => {
-    const q = params ? '?' + new URLSearchParams(params).toString() : '';
-    return req<any>(`/reviews/admin${q}`);
+    return req<any>(`/reviews/admin${buildQuery(params)}`);
   },
   adminApprove: (id: string) => req<any>(`/reviews/admin/${id}/approve`, { method: 'PATCH' }),
   adminReject: (id: string) => req<any>(`/reviews/admin/${id}/reject`, { method: 'PATCH' }),
@@ -160,8 +159,7 @@ export const reviews = {
 
 export const emails = {
   adminListDrafts: (params?: any) => {
-    const q = params ? '?' + new URLSearchParams(params).toString() : '';
-    return req<any>(`/emails/drafts${q}`);
+    return req<any>(`/emails/drafts${buildQuery(params)}`);
   },
   adminSendDraft: (id: string) => req<any>(`/emails/drafts/${id}/send`, { method: 'POST' }),
   adminCancelDraft: (id: string) => req<any>(`/emails/drafts/${id}/cancel`, { method: 'PATCH' }),
