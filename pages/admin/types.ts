@@ -76,7 +76,8 @@ export interface Transport {
 
 export type AdminPage =
   | 'overview' | 'pets' | 'handlers' | 'owners'
-  | 'transports' | 'track-map' | 'messages'
+  | 'transports' | 'shipments' | 'customers' | 'couriers'
+  | 'track-map' | 'messages'
   | 'quotes' | 'reviews' | 'emails' | 'settings';
 
 // ── Backward-compat aliases (used by TrackMap) ───────────────────────────
@@ -89,6 +90,8 @@ export const generateHandlerId = (): string => {
   for (let i = 0; i < 6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
   return id;
 };
+
+export const generateCourierId = generateHandlerId;
 
 export const generateTrackingId = (): string => {
   const num = Math.floor(1000 + Math.random() * 9000);

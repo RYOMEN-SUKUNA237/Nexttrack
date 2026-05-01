@@ -1,14 +1,14 @@
 import React from 'react';
 import Layout from '../components/Layout';
-import { HeroSection, PetTypesSection, ServicesSection } from './HomePart1';
+import { HeroSection, TrackingCategoriesSection, CapabilitiesSection } from './HomePart1';
 import { TrackSection, WhyUsSection, FAQSection } from './HomePart2';
 import { TestimonialsSection, ContactSection } from './HomePart3';
 
 const Home: React.FC = () => (
   <Layout>
     <HeroSection />
-    <PetTypesSection />
-    <ServicesSection />
+    <TrackingCategoriesSection />
+    <CapabilitiesSection />
     <TrackSection />
     <WhyUsSection />
     <TestimonialsSection />

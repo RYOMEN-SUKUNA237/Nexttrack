@@ -1,69 +1,154 @@
-/* ─── PawTrack Global Design System ─────────────────────────────────────── */
+/* ─── Next Track Global Design System — Professional Navy Edition ─────── */
 
-/* Tailwind base reset */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Custom Animations ───────────────────────────────────────────────────── */
+/* ─── CSS Variables ─────────────────────────────────────────────────────── */
+:root {
+  --navy-950: #050d1a;
+  --navy-900: #0a1628;
+  --navy-800: #0f2040;
+  --navy-700: #152b55;
+  --navy-600: #1e3a6e;
+  --navy-500: #2952a3;
+  --navy-400: #3b6fd4;
+  --navy-300: #6b96e8;
+  --navy-200: #a8c4f4;
+  --navy-100: #d4e4fc;
+  --navy-50:  #eaf2ff;
+  --accent:   #4f8ef7;
+  --accent-2: #60a5fa;
+  --success:  #10b981;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --white:    #ffffff;
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+}
+
+/* ─── Custom Animations ─────────────────────────────────────────────────── */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-}
-@keyframes pawPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.92); }
+  50%       { transform: translateY(-10px); }
 }
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
+  from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 @keyframes ping {
   0%,100% { transform: scale(1); opacity: 0.75; }
-  50% { transform: scale(1.6); opacity: 0; }
+  50%      { transform: scale(1.5); opacity: 0; }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79,142,247,0.6); }
+  70%  { transform: scale(1);    box-shadow: 0 0 0 10px rgba(79,142,247,0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79,142,247,0); }
+}
+@keyframes route-dash {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes dot-move {
+  0%   { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-.animate-float   { animation: float 4s ease-in-out infinite; }
-.animate-pawpulse { animation: pawPulse 2.5s ease-in-out infinite; }
-.animate-slide-up { animation: slideUp 0.6s ease forwards; }
+.animate-float     { animation: float 4s ease-in-out infinite; }
+.animate-slide-up  { animation: slideUp 0.6s ease forwards; }
+.animate-pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
 
-/* ─── Paw Print Decorative SVG Background ────────────────────────────────── */
-.paw-bg {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='%23F59E0B' opacity='0.06'%3E%3Cpath d='M12 17.5c2.33 2.33 5.5 1.5 6.5-1 1.5-3-1-6-4-5.5-1.5-3-5-3-6.5.5S5.67 15.17 8 17.5l4 4 4-4z'/%3E%3C/svg%3E");
-  background-size: 60px;
+/* ─── Grid pattern for hero backgrounds ─────────────────────────────────── */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-/* ─── Glassmorphism cards ─────────────────────────────────────────────────── */
+/* ─── Glassmorphism cards ────────────────────────────────────────────────── */
 .glass {
-  background: rgba(255, 248, 237, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.glass-dark {
-  background: rgba(13, 75, 77, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+.glass-navy {
+  background: rgba(10, 22, 40, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(79, 142, 247, 0.2);
+}
+.glass-light {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(30, 58, 110, 0.12);
 }
 
-/* ─── Status badges ────────────────────────────────────────────────────────── */
-.badge-pending        { @apply bg-yellow-100 text-yellow-800 border border-yellow-200; }
-.badge-picked-up      { @apply bg-blue-100 text-blue-800 border border-blue-200; }
-.badge-in-transit     { @apply bg-amber-100 text-amber-800 border border-amber-200; }
-.badge-out-for-delivery { @apply bg-orange-100 text-orange-800 border border-orange-200; }
-.badge-delivered      { @apply bg-green-100 text-green-800 border border-green-200; }
-.badge-paused         { @apply bg-red-100 text-red-800 border border-red-200; }
-.badge-returned       { @apply bg-gray-100 text-gray-700 border border-gray-200; }
+/* ─── Status badges ──────────────────────────────────────────────────────── */
+.badge-pending         { @apply bg-yellow-50  text-yellow-800 border border-yellow-200; }
+.badge-picked-up       { @apply bg-blue-50    text-blue-800   border border-blue-200; }
+.badge-in-transit      { @apply bg-indigo-50  text-indigo-800 border border-indigo-200; }
+.badge-out-for-delivery{ @apply bg-orange-50  text-orange-800 border border-orange-200; }
+.badge-delivered       { @apply bg-emerald-50 text-emerald-800 border border-emerald-200; }
+.badge-paused          { @apply bg-red-50     text-red-800    border border-red-200; }
+.badge-returned        { @apply bg-gray-100   text-gray-700   border border-gray-200; }
 
-/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #FFF8ED; }
-::-webkit-scrollbar-thumb { background: #F59E0B; border-radius: 3px; }
+/* ─── Gradient text ──────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #4f8ef7, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-/* ─── Mapbox fixes ─────────────────────────────────────────────────────────── */
-.mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib { display: none !important; }
+/* ─── Professional card hover ────────────────────────────────────────────── */
+.pro-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.pro-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(10,22,40,0.12);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a1628; }
+::-webkit-scrollbar-thumb { background: #2952a3; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4f8ef7; }
+
+/* ─── Mapbox fixes ───────────────────────────────────────────────────────── */
+.mapboxgl-ctrl-logo,
+.mapboxgl-ctrl-attrib { display: none !important; }
+
+/* ─── Admin sidebar nav active line ─────────────────────────────────────── */
+.nav-item-active {
+  background: linear-gradient(135deg, rgba(79,142,247,0.18), rgba(79,142,247,0.08));
+  border-left: 3px solid #4f8ef7;
+}
+.nav-item-inactive:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+/* ─── Live dot animation ─────────────────────────────────────────────────── */
+.live-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #10b981;
+  animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;
+}
