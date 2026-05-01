@@ -7,7 +7,7 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error('❌ FATAL: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.');
   console.error('   On Vercel: add them in Project Settings → Environment Variables.');
   console.error('   Locally:   check server/.env exists and has the correct values.');
-  process.exit(1);
+  // Removed process.exit(1) so Vercel doesn't throw 500 FUNCTION_INVOCATION_FAILED on health checks
 }
 
 const pool = new Pool({
