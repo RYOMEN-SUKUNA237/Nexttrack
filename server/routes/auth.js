@@ -27,6 +27,7 @@ router.post('/login', async (req, res) => {
     });
 
     if (error || !data?.user || !data?.session) {
+      console.error('Supabase auth error:', error?.message || 'Unknown error', 'URL:', !!process.env.SUPABASE_URL);
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 

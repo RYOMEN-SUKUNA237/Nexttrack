@@ -62,7 +62,15 @@ app.use('/api/reviews', publicLimiter, reviewRoutes);
 app.use('/api/emails', emailRoutes);
 
 app.get('/', (req, res) => res.json({ name: 'Next Track API', status: 'running' }));
-app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+app.get('/api/health', (req, res) => res.json({ 
+  status: 'ok', 
+  timestamp: new Date().toISOString(),
+  env: {
+    hasSupabaseUrl: !!process.env.SUPABASE_URL,
+    hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    hasDbUrl: !!process.env.DATABASE_URL
+  }
+}));
 
 app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
 app.use((err, req, res, next) => {
