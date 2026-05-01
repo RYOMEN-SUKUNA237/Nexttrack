@@ -91,7 +91,7 @@ export const markNotificationRead = (id: string) => req<any>(`/dashboard/notific
 
 // ─── Messages ────────────────────────────────────────────────────────────
 export const startConversation = (data: any) => req<any>('/messages/conversations', { method: 'POST', body: JSON.stringify(data) });
-export const sendMessage = (conversationId: number, body: string) => req<any>('/messages/send', { method: 'POST', body: JSON.stringify({ conversationId, body }) });
+export const sendMessage = (conversationId: number, content: string, sender_name?: string, sender_type?: string) => req<any>('/messages/send', { method: 'POST', body: JSON.stringify({ conversation_id: conversationId, content, sender_name, sender_type }) });
 export const getAdminConversations = () => req<any>('/messages/admin/conversations');
 export const getConversationMessages = (id: number) => req<any>(`/messages/admin/conversations/${id}`);
 export const replyToConversation = (id: number, body: string) => req<any>(`/messages/admin/conversations/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) });
@@ -123,6 +123,9 @@ export const customers = {
 };
 
 export const messages = {
+  startConversation: startConversation,
+  send: (data: any) => sendMessage(data.conversation_id, data.content, data.sender_name, data.sender_type),
+  getMessages: (id: number | string) => req<any>(`/messages/conversations/${id}/messages`),
   adminListConversations: (params?: any) => {
     const q = params ? '?' + new URLSearchParams(params).toString() : '';
     return req<any>(`/messages/admin/conversations${q}`);
