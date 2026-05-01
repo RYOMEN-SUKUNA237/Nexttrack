@@ -23,11 +23,11 @@ app.disable('x-powered-by');
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (origin.startsWith('http://localhost:')) return cb(null, true);
-    if (origin.includes('Next Track.com')) return cb(null, true);
-    if (origin.includes('vercel.app')) return cb(null, true);
-    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return cb(null, true);
+    if (!origin) return cb(null, true);                          // server-to-server / curl
+    if (origin.startsWith('http://localhost:')) return cb(null, true);  // local dev
+    if (origin.startsWith('http://127.0.0.1:')) return cb(null, true);  // local dev alt
+    if (origin.endsWith('.vercel.app')) return cb(null, true);          // all Vercel previews & production
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return cb(null, true); // custom domain
     cb(new Error('Blocked by CORS'));
   },
   credentials: true,
