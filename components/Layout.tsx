@@ -75,7 +75,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <PawPrint className="w-5 h-5 text-white" />
             </div>
             <div className="leading-none">
-              <span className="text-xl font-bold tracking-tight" style={{ color: '#0D4B4D' }}>Paw</span>
+              <span className="text-xl font-bold tracking-tight" style={{ color: '#0D4B4D' }}>Next </span>
               <span className="text-xl font-bold tracking-tight" style={{ color: '#F59E0B' }}>Track</span>
             </div>
           </Link>
